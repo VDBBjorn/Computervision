@@ -7,30 +7,21 @@
 using namespace std;
 using namespace cv;
 
-int main(int argc, char** argv){
-	VideoCapture capframes("./Dataset/01/frame%05d.png");
-	vector<Mat> frames;
-	while( capframes.isOpened() )
+vector<Mat> read_images(String folder, String regex) {
+	VideoCapture cap(folder+"/"+regex);
+	vector<Mat> matrices;
+	while( cap.isOpened() )
 	{
 	    Mat img;
-	    if(!capframes.read(img)) {
-	    	break;
+	    if(!cap.read(img)) {
+	    	return matrices;
 	    }
-	   	frames.push_back(img);
+	   	matrices.push_back(img);
 	}
+	return matrices;
+}
 
-	VideoCapture capmasks("./Dataset/01/mask%05d.png");	
-	vector<Mat> masks;
-	while( capmasks.isOpened() )
-	{
-	    Mat img;
-	    if(!capmasks.read(img)) {
-	    	break;
-	    }
-	    capmasks >> img;
-	   	masks.push_back(img);
-	}
-
+void showBlendedImages(vector<Mat> & frames, vector<Mat> & masks) {
 	double alpha = 0.7;
 	double beta = 1.0 - alpha;
 	namedWindow( "Display window", WINDOW_AUTOSIZE );
@@ -41,6 +32,18 @@ int main(int argc, char** argv){
 		imshow( "Display window", dst );  
 		waitKey(0);
 	}
+}
+
+int main(int argc, char** argv){
+	if(argc <= 1) {
+		cout << "add parameters: dataset folder" << endl;
+		return 1;
+	}	
+
+	vector<Mat> frames = read_images(argv[1],"frame%05d.png");
+	vector<Mat> masks = read_images(argv[1],"mask%05d.png");
+
+	showBlendedImages(frames, masks);
 
 	waitKey(0);
     destroyAllWindows();
