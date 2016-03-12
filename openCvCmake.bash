@@ -1,4 +1,6 @@
 #!/bin/bash
+# Argument: main .cpp filename zonder .cpp
+# Bij eerste run nieuwe executable executie rechten geven
 cd $PWD
 if [ $# != 1 ]; then
 	echo "Use: openCvCmake.bash [projectName]">&2
