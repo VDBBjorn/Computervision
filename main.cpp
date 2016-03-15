@@ -16,19 +16,19 @@ vector<Mat> read_images(String folder, String regex) {
 	    if(!cap.read(img)) {
 	    	return matrices;
 	    }
+		if(img.channels()>1) cvtColor(img, img, CV_RGB2GRAY);
 	   	matrices.push_back(img);
 	}
 	return matrices;
 }
 
 void showBlendedImages(vector<Mat> & frames, vector<Mat> & masks) {
-	double alpha = 0.7;
-	double beta = 1.0 - alpha;
+	double alpha = 1.0;
+	double beta = 1.0;
 	namedWindow( "Display window", WINDOW_AUTOSIZE );
 	for(int i = 0; i<frames.size(); i++) {
 		Mat dst;
-		cvtColor(frames[i], frames[i], CV_RGB2GRAY);
-		addWeighted( masks[i] , alpha, frames[i], beta, 0.0, dst);																																																																																																																																																																																																																				
+		addWeighted( masks[i] , alpha, frames[i], beta, 0.0, dst);
 		imshow( "Display window", dst );  
 		waitKey(0);
 	}
