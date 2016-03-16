@@ -4,12 +4,14 @@ Wegdetectie
 		- Eenvoudige methode
 		- Kan ook gebruikt worden voor lijndetectie (extra informatie bovenop methode voor lijndetectie)
 		- ...
-	Lijndetectie: Methode? (Mathias)
-		- ...
 	Classifier: Support Vector Machine (?)
 		- Bestaande implementatie in OpenCV
 		- Veel informatie uit de les?
 		- ...
 	F1-scores (Tim)
 		- Duidelijke maatstaf voor progressie tijdens de ontwikkeling en voor eindresultaat
+Lijndetectie: Methode? (Mathias)
+	- ...
 Max snelheid afleiden (Maarten)
+	Uit wegdetectie + lijndetectie + maskers (stuurrichting) het dichtstbijzijnde obstakel detecteren
+	Adhv hoogste intesiteit die niet overlapt met obstakel de maximum snelheid bepalen
