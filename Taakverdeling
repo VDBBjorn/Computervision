@@ -1,7 +1,15 @@
-OpenCV framework, datasets inlezen: Bjorn
+OpenCV framework opstellen om datasets in te lezen (Bjorn)
 Wegdetectie
-	Classifier: Tim > ?
-	Lijndetectie: Mathias > Methode?
-
-Max snelheid afleiden: Maarten
-F1-scores: Tim
+	Texture analysis: Local binary pattern (Tim)
+		- Eenvoudige methode
+		- Kan ook gebruikt worden voor lijndetectie (extra informatie bovenop methode voor lijndetectie)
+		- ...
+	Lijndetectie: Methode? (Mathias)
+		- ...
+	Classifier: Support Vector Machine (?)
+		- Bestaande implementatie in OpenCV
+		- Veel informatie uit de les?
+		- ...
+	F1-scores (Tim)
+		- Duidelijke maatstaf voor progressie tijdens de ontwikkeling en voor eindresultaat
+Max snelheid afleiden (Maarten)
