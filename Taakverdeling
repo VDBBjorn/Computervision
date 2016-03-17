@@ -8,7 +8,9 @@ Wegdetectie
 		- Bestaande implementatie in OpenCV
 		- Veel informatie uit de les?
 		- ...
-	F1-scores (Tim)
+	F1-scores: (Tim)
+		Aanmaken pixelblok DB van stukken weg en obstakels.
+		Module die F1 scores berekend voor algoritme+dataset
 		- Duidelijke maatstaf voor progressie tijdens de ontwikkeling en voor eindresultaat
 Lijndetectie: Methode? (Mathias)
 	- Voor lijndetectie bij wegen wordt (volgens het internet) het meest de combinatie van Canny en (Probabilistic) Hough transformation gebruikt
