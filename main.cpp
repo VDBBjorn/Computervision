@@ -3,6 +3,7 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
 #include <vector>
+#include "LineDetection/LineDetection.cpp"
 
 using namespace std;
 using namespace cv;
@@ -42,6 +43,19 @@ int main(int argc, char** argv){
 
 	vector<Mat> frames = read_images(argv[1],"frame%05d.png");
 	vector<Mat> masks = read_images(argv[1],"mask%05d.png");
+
+	// detect lines
+	// TODO: Filter lines in wrong orientation and choose better parameters
+	LineDetection ld;
+	int houghVote = 200;
+	for(int i=0; i < frames.size(); i++) {
+		bool drawLines = true; // draw detected lines on source image
+		bool debugLinedetection = true; // wait after each frame and show all intermediate results
+		vector<Vec4i> lines = ld.getLinesFromImage(frames[i], houghVote, drawLines, debugLinedetection);	
+	}
+
+
+
 
 	showBlendedImages(frames, masks);
 
