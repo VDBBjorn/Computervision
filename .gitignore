@@ -43,7 +43,9 @@ maxSpeed
 *.fot
 *.cb
 *.cb2
-
+*.bst
+*.dbj
+ 
 ## Intermediate documents:
 *.dvi
 *-converted-to.*
