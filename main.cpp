@@ -4,6 +4,8 @@
 #include "opencv2/highgui.hpp"
 #include <vector>
 #include "LineDetection/LineDetection.cpp"
+#include "Headers/lbpfeaturevector.hpp"
+#include "Headers/io.hpp"
 
 using namespace std;
 using namespace cv;
@@ -53,9 +55,6 @@ int main(int argc, char** argv){
 		bool debugLinedetection = true; // wait after each frame and show all intermediate results
 		vector<Vec4i> lines = ld.getLinesFromImage(frames[i], houghVote, drawLines, debugLinedetection);	
 	}
-
-
-
 
 	showBlendedImages(frames, masks);
 
