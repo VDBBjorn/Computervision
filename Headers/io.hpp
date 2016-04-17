@@ -62,6 +62,33 @@ namespace io {
 	        }
 	    }
 	}
+
+	void read_images(String folder, String regex, vector<Mat>& images) {
+		VideoCapture cap(folder+"/"+regex);
+		images.clear();
+		while( cap.isOpened() )
+		{
+		    Mat img;
+		    if(!cap.read(img)) {
+		    	return;
+		    }
+		   	images.push_back(img);
+		}
+	}
+
+	void showBlendedImages(vector<Mat> & frames, vector<Mat> & masks) {
+		double alpha = 1.0;
+		double beta = 1.0;
+		namedWindow( "Display window", WINDOW_AUTOSIZE );
+		for(int i = 0; i<frames.size(); i++) {
+			Mat dst;
+			if(frames[i].channels()>1) cvtColor(frames[i], frames[i], CV_RGB2GRAY);
+			if(masks[i].channels()>1) cvtColor(masks[i], masks[i], CV_RGB2GRAY);
+			addWeighted( masks[i] , alpha, frames[i], beta, 0.0, dst);
+			imshow( "Display window", dst );  
+			waitKey(0);
+		}
+	}
 }
 
 #endif

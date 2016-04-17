@@ -29,17 +29,9 @@ private:
 	int lbpRadius;
 	int histBins;
 public:
-	LbpFeatureVector(): outerMargin(1),innerMargin(0),blkSize(32),lbpRadius(1),histBins(16){
-		blkX = outerMargin;
-		blkY = outerMargin;
-		if(outerMargin<lbpRadius) outerMargin = lbpRadius;
-	}
+	LbpFeatureVector(): outerMargin(1),innerMargin(0),blkSize(32),lbpRadius(1),histBins(16){}
 
-	LbpFeatureVector(int _outerMargin,int _innerMargin,int _blkSize,int _lbpRadius,int _histBins):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){
-		blkX = outerMargin;
-		blkY = outerMargin;
-		if(outerMargin<lbpRadius) outerMargin = lbpRadius;
-	}
+	LbpFeatureVector(int _outerMargin,int _innerMargin,int _blkSize,int _lbpRadius,int _histBins):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){}
 
 	/* Calculate LBP values of pixels in src to dst, with radius r.
 	* Only calculate withing given window, measured by source coordinates (x,y) and winSize.
@@ -112,13 +104,18 @@ public:
 	    }
 	}
 
-	void processFrame(string fnFrame){
+	void processFrame(string fnFrame, Mat& img){
     	ostringstream strBldr; // Stringbuilder
 
-		/***    Process frame   ***/
+    	/* Initial configuration */
+		blkX = outerMargin;
+		blkY = outerMargin;
+		if(outerMargin<lbpRadius) outerMargin = lbpRadius;
+
+		/*    Process frame   */
 		string frameName = fnFrame.substr(0,fnFrame.size()-4);
 
-		Mat img = imread(fnFrame, CV_LOAD_IMAGE_COLOR);
+		// Mat img = imread(fnFrame, CV_LOAD_IMAGE_COLOR);
 		
 		if(! img.data){
 		    cerr <<  "Could not open or find frame " << frameName << std::endl ;
@@ -144,7 +141,7 @@ public:
 		int totalBlocks = numBlksWidth*numBlksHeight - 1; // -1 Accounts for 0-indexing
 		int isRoadThreshold = totalBlocks*0.6;
 
-		/** Process blocks in frame **/
+		/* Process blocks in frame */
 		int blkIdx = -1;
 		while(blkX+blkSize+outerMargin < imWidth && blkY+blkSize+outerMargin < imHeight){
 		    blkIdx++;
@@ -190,6 +187,8 @@ public:
 		io::saveImage(frameName+"_testblocks",img);
 
 	    io::showImage(fnFrame,img,false);
+	    waitKey(0);
+	    destroyWindow(fnFrame);
 	}
 };
 
