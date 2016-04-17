@@ -114,8 +114,6 @@ public:
 
 		/*    Process frame   */
 		string frameName = fnFrame.substr(0,fnFrame.size()-4);
-
-		// Mat img = imread(fnFrame, CV_LOAD_IMAGE_COLOR);
 		
 		if(! img.data){
 		    cerr <<  "Could not open or find frame " << frameName << std::endl ;

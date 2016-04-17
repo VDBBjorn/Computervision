@@ -32,7 +32,6 @@ int main (int argc, char** argv){
 		fv.processFrame(string(fnFrame),frames[i]);
 	}
 
-    // waitKey(0);
     destroyAllWindows();
     return 0;
 }
