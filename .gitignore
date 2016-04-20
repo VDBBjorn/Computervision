@@ -27,8 +27,11 @@
 *.out
 *.app
 
+# Custom
 CMake*
 main
+svm
+trainingsdata
 maxSpeed
 
 ## Core latex/pdflatex auxiliary files:
