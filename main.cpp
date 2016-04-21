@@ -23,11 +23,14 @@ int main(int argc, char** argv){
 	// detect lines
 	// TODO: Filter lines in wrong orientation and choose better parameters
 	LineDetection ld;
-	int houghVote = 200;
+	int initialHoughVote = 100;
+	int initialHoughVote2 = 100;
+	int houghVote = initialHoughVote;
+	int houghVote2 = initialHoughVote2;
 	for(int i=0; i < frames.size(); i++) {
 		bool drawLines = true; // draw detected lines on source image
-		bool debugLinedetection = true; // wait after each frame and show all intermediate results
-		vector<Vec4i> lines = ld.getLinesFromImage(frames[i], houghVote, drawLines, debugLinedetection);	
+		bool debugLinedetection = false; // wait after each frame and show all intermediate results
+		vector<RoadLine> lines = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection);
 	}
 
 	io::showBlendedImages(frames, masks);
@@ -36,3 +39,4 @@ int main(int argc, char** argv){
     destroyAllWindows();
 	return 0;
 }																																																																																							
+

@@ -24,6 +24,17 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #define PI 3.1415926
 
+struct RoadLine {
+	cv::Point pt1;
+	cv::Point pt2;
+
+	RoadLine(cv::Point & _pt1, cv::Point & _pt2) {
+		this->pt1 = _pt1;
+		this->pt2 = _pt2;
+	}
+	RoadLine(): pt1(0,0), pt2(0,0) {}
+};
+
 class LineFinder {
 
   private:
@@ -105,7 +116,7 @@ class LineFinder {
 			  cv::Point pt2((*it2)[2],(*it2)[3]+shift);
 
 			  cv::line( image, pt1, pt2, color, 6 );
-		std::cout << " HoughP line: ("<< pt1 <<"," << pt2 << ")\n"; 
+		//std::cout << " HoughP line: ("<< pt1 <<"," << pt2 << ")\n"; 
 			  ++it2;	
 		  }
 	  }
