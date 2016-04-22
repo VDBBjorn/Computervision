@@ -104,7 +104,7 @@ public:
 	    }
 	}
 
-	void processFrame(string fnFrame, Mat& img){
+	void processFrame(string fnFrame, Mat& img, Mat& featVectors){
     	ostringstream strBldr; // Stringbuilder
 
     	/* Initial configuration */
@@ -122,8 +122,7 @@ public:
 		int imWidth=img.cols;
 		int imHeight=img.rows;
 
-		// vector<vector<int> > featVectors; // TODO For passing to trained SVM
-
+		//vector<vector<int> > featVectors; // TODO For passing to trained SVM
 		io::checkDir(io::dirOutput);
 
 		/* Convert to grayscale for processing */
@@ -138,6 +137,9 @@ public:
 		int numBlksHeight = (imHeight-2*outerMargin-blkSize)/(innerMargin+blkSize) + 1;
 		int totalBlocks = numBlksWidth*numBlksHeight - 1; // -1 Accounts for 0-indexing
 		int isRoadThreshold = totalBlocks*0.6;
+
+
+		featVectors = Mat(totalBlocks+1,histBins,CV_32SC1);	
 
 		/* Process blocks in frame */
 		int blkIdx = -1;
@@ -165,12 +167,14 @@ public:
 		    /* Create histogram featurevector for LBP values of current block */
 		    vector<int> hist;
 		    histogram(lbpBlk,hist,histBins);
-		    // featVectors.push_back(hist); // TODO For passing to trained SVM
+		    for(int i=0; i<hist.size();i++) {
+		    	featVectors.at<int>(blkIdx,i) = hist[i];
+		    }
 
 		    /* Write data to CSV-file */
 		    fos<<blkIdx<<",\"";
 		    io::printVector(fos,hist);
-		    fos<<"\","<<isRoad;
+		    fos<<"\","<< (isRoad? 1: -1);
 		    fos<<endl;
 
 		    /* Increment block coordinates */
