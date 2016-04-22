@@ -12,7 +12,7 @@ using namespace cv;
 class LineDetection {
 
 	public:
-    vector<RoadLine> getLinesFromImage(Mat & image,int initialHoughVote, int & houghVote,int initialHoughVote2, int & houghVote2, bool drawLinesOnImage, bool showSteps) {
+    Mat getLinesFromImage(Mat & image,int initialHoughVote, int & houghVote,int initialHoughVote2, int & houghVote2, bool drawLinesOnImage, bool showSteps) {
 
 			// Filter hough detected lines by angle
 			int minAngle = 20;
@@ -62,11 +62,9 @@ class LineDetection {
 				float theta= (*it)[1]; // second element is angle theta
 
                 float xStart = (rho-result.rows*sin(theta))/cos(theta);
+
 				//point of intersection of the line with first row
 				Point pt1(rho/cos(theta),0);
-
-
-
 
 				// point of intersection of the line with last row
 				Point pt2((rho-result.rows*sin(theta))/cos(theta),result.rows);
@@ -139,6 +137,13 @@ class LineDetection {
 				//imwrite("contours.bmp", contoursInv);
 			}
 
+
+
+
+			vector<vector<Point> > contourPoints;
+			vector<Vec4i> hierarchy;
+			findContours( contours, contourPoints, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+
 		   // Set probabilistic Hough parameters
 			/*ld.setLineLengthAndGap(150,10);
 			ld.setMinVote(3);
@@ -199,7 +204,9 @@ class LineDetection {
 
 					if ( ori1 < maxAngle && ori1 > minAngle && x >= 0 && x <= result.cols) { // filter to remove vertical and horizontal lines // || theta < 3.14 && theta > 1.66
 
-                        line( hough2, pt1, pt2, Scalar(0), 8);
+
+						line( hough2, pt1, pt2, Scalar(0), 8);
+						line( result2, pt1, pt2, Scalar(0), 8);
 
                         pt1.y += image.cols/4;
                         pt2.y += image.cols/4;
@@ -214,7 +221,9 @@ class LineDetection {
                             RoadLine l(pt1, pt2);
                             resultLines[1] = l;
                         }
+
 					}
+
                     ++it;
 				}
 
@@ -232,7 +241,8 @@ class LineDetection {
 			}
 
 
-    		return resultLines;
+    		//return resultLines;
+			return houghPinv;
 		};
 
 };

@@ -21,16 +21,21 @@ int main(int argc, char** argv){
 	io::read_images(argv[1],"mask%05d.png",masks);
 
 	// detect lines
-	// TODO: Filter lines in wrong orientation and choose better parameters
 	LineDetection ld;
-	int initialHoughVote = 100;
-	int initialHoughVote2 = 100;
+	int initialHoughVote = 150;
+	int initialHoughVote2 = 150;
 	int houghVote = initialHoughVote;
 	int houghVote2 = initialHoughVote2;
 	for(int i=0; i < frames.size(); i++) {
 		bool drawLines = true; // draw detected lines on source image
 		bool debugLinedetection = false; // wait after each frame and show all intermediate results
-		vector<RoadLine> lines = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection);
+		Mat lineContours = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection);
+
+		namedWindow("LineContours");
+		imshow("LineContours",lineContours);
+		waitKey(0);
+		destroyAllWindows();
+
 	}
 
 	io::showBlendedImages(frames, masks);
