@@ -26,11 +26,12 @@ int main(int argc, char** argv){
 	int initialHoughVote2 = 150;
 	int houghVote = initialHoughVote;
 	int houghVote2 = initialHoughVote2;
+	vector<Mat> lineContours;
 	for(int i=0; i < frames.size(); i++) {
 		bool drawLines = true; // draw detected lines on source image
 		bool debugLinedetection = false; // wait after each frame and show all intermediate results
-		Mat lineContours = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection);
-
+		Mat lineContour = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection);
+		lineContours.push_back(lineContour);
 		namedWindow("LineContours");
 		imshow("LineContours",lineContours);
 		waitKey(0);
