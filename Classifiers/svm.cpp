@@ -14,8 +14,6 @@ using namespace std;
 using namespace cv;
 using namespace cv::ml;
 
-
-
 int main (int argc, char** argv){
 	Ptr<SVM> svm = SVM::create();
     svm->setType(SVM::C_SVC);
@@ -31,7 +29,7 @@ int main (int argc, char** argv){
 
 	    char number[36];
 	    sprintf(number, "%05d", f);
-	    string input = "output/frame"+string(number)+"_data.csv";
+	    string input = "output/frame"+string(number)+"_data-correct.csv";
 	    cout << input << endl;; 
 	 	ifstream file(input.c_str());
 		string value;
@@ -71,39 +69,35 @@ int main (int argc, char** argv){
 	// Train the SVM	    
     svm->train(trainingsMat, ROW_SAMPLE, labelsMat);
 	//svm->trainAuto()
-
+    cout << "svm trained" << endl;
     // Show decision regions by the SVM
-    Mat image = imread("Dataset/02/frame00000.png", CV_LOAD_IMAGE_COLOR);
+    Mat image = imread("Dataset/02/frame00010.png", CV_LOAD_IMAGE_COLOR);
     //Mat::zeros(720, 1280, CV_8UC3);
-    Vec3b green(0,255,0), blue (255,0,0);
-    for (int i = 0; i < image.rows; ++i)
-        for (int j = 0; j < image.cols; ++j)
-        {
-            Mat sampleMat = (Mat_<float>(1,16) << j,i);
-            float response = svm->predict(sampleMat);
-            if (response == 1)
-                image.at<Vec3b>(i,j)  = green;
-            else if (response != 1)
-                image.at<Vec3b>(i,j)  = blue;
-        }
-    // Show the training data
-    int thickness = -1;
-    int lineType = 8;
-    circle( image, Point(501,  10), 5, Scalar(  0,   0,   0), thickness, lineType );
-    circle( image, Point(255,  10), 5, Scalar(255, 255, 255), thickness, lineType );
-    circle( image, Point(501, 255), 5, Scalar(255, 255, 255), thickness, lineType );
-    circle( image, Point( 10, 501), 5, Scalar(255, 255, 255), thickness, lineType );
-    // Show support vectors
-    thickness = 2;
-    lineType  = 8;
-    Mat sv = svm->getUncompressedSupportVectors();
-    for (int i = 0; i < sv.rows; ++i)
-    {
-        const float* v = sv.ptr<float>(i);
-        circle( image,  Point( (int) v[0], (int) v[1]),   6,  Scalar(128, 128, 128), thickness, lineType);
+    //Vec3b green(0,255,0), blue (255,0,0);
+
+    LbpFeatureVector fv;
+    Mat features;
+    fv.processFrame("test-data", image, features);
+    image = imread("Dataset/02/frame00010.png", CV_LOAD_IMAGE_COLOR);
+    cout << "--------------------------------" << endl;
+    cout << features << endl;
+
+    for(int i=0; i<features.rows; i++) {
+    	Mat_<float> row = Mat(features, Rect(0,i,features.cols,1));
+    	int response = svm->predict(row);
+    	int red=0,green=0;
+    	int blkSize = 32;
+    	int blkX = (i%39)*blkSize;
+    	int blkY = (i/39)*blkSize;
+	    (response==1? green=255 : red=255);
+	    rectangle(image
+	        ,Point(blkX,blkY)
+	        ,Point(blkX+blkSize,blkY+blkSize)
+	        ,Scalar(0,green,red)
+	    );
     }
     imwrite("result.png", image);        // save the image
-    imshow("SVM Simple Example", image); // show it to the user
+    imshow("output", image); // show it to the user
     waitKey(0);
 
 	return 0;
