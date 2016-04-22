@@ -2,6 +2,9 @@
 #define IO_
 
 #include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
 
