@@ -37,26 +37,55 @@ public:
 	template <typename _Tp>
 	void _LBP(const Mat& src, Mat& dst, int r, int x, int y, int winSize) {
 	    if( x<r || y<r || x+winSize+r>src.cols || y+winSize+r>src.rows){
-	        cerr << "Error in LBP_ : source coordinates and window size make radius exceed image size" << endl;
+	        cerr << "Error in _LBP : source coordinates and window size make radius exceed image size" << endl;
 	        throw;
 	    }
-	    dst = Mat::zeros(winSize, winSize, CV_8UC1);
+	    dst = Mat::zeros(winSize, winSize, CV_8UC(src.channels()));
+	    vector<Mat> srcChnls(src.channels()) , dstChnls(src.channels());
+	    split(src,srcChnls);
+	    split(dst,dstChnls);
 	    for(int i=y;i<y+winSize;i++) {
 	        for(int j=x;j<x+winSize;j++) {
-	            _Tp center = src.at<_Tp>(i,j);
-	            unsigned char code = 0;
-	            code |= (src.at<_Tp>(i-r,j-r) > center) << 7;
-	            code |= (src.at<_Tp>(i-r,j) > center) << 6;
-	            code |= (src.at<_Tp>(i-r,j+r) > center) << 5;
-	            code |= (src.at<_Tp>(i,j+r) > center) << 4;
-	            code |= (src.at<_Tp>(i+r,j+r) > center) << 3;
-	            code |= (src.at<_Tp>(i+r,j) > center) << 2;
-	            code |= (src.at<_Tp>(i+r,j-r) > center) << 1;
-	            code |= (src.at<_Tp>(i,j-r) > center) << 0;
-	            dst.at<unsigned char>(i-y,j-x) = code;
-	        }
+		        for(int k=0;k<srcChnls.size();k++) {
+		            _Tp center = srcChnls[k].at<_Tp>(i,j);
+		            unsigned char code = 0;
+		            code |= (srcChnls[k].at<_Tp>(i-r,j-r) > center) << 7;
+		            code |= (srcChnls[k].at<_Tp>(i-r,j) > center) << 6;
+		            code |= (srcChnls[k].at<_Tp>(i-r,j+r) > center) << 5;
+		            code |= (srcChnls[k].at<_Tp>(i,j+r) > center) << 4;
+		            code |= (srcChnls[k].at<_Tp>(i+r,j+r) > center) << 3;
+		            code |= (srcChnls[k].at<_Tp>(i+r,j) > center) << 2;
+		            code |= (srcChnls[k].at<_Tp>(i+r,j-r) > center) << 1;
+		            code |= (srcChnls[k].at<_Tp>(i,j-r) > center) << 0;
+		            dstChnls[k].at<unsigned char>(i-y,j-x) = code;
+		        }
+		    }
 	    }
+	    merge(&dstChnls[0],dstChnls.size(),dst); // &dstChnls[0] makes the vector look like a pointer to an array
 	}
+	// template <typename _Tp>
+	// void _LBP(const Mat& src, Mat& dst, int r, int x, int y, int winSize) {
+	//     if( x<r || y<r || x+winSize+r>src.cols || y+winSize+r>src.rows){
+	//         cerr << "Error in LBP_ : source coordinates and window size make radius exceed image size" << endl;
+	//         throw;
+	//     }
+	//     dst = Mat::zeros(winSize, winSize, CV_8UC(src.channels()));
+	//     for(int i=y;i<y+winSize;i++) {
+	//         for(int j=x;j<x+winSize;j++) {
+	//             _Tp center = src.at<_Tp>(i,j);
+	//             unsigned char code = 0;
+	//             code |= (src.at<_Tp>(i-r,j-r) > center) << 7;
+	//             code |= (src.at<_Tp>(i-r,j) > center) << 6;
+	//             code |= (src.at<_Tp>(i-r,j+r) > center) << 5;
+	//             code |= (src.at<_Tp>(i,j+r) > center) << 4;
+	//             code |= (src.at<_Tp>(i+r,j+r) > center) << 3;
+	//             code |= (src.at<_Tp>(i+r,j) > center) << 2;
+	//             code |= (src.at<_Tp>(i+r,j-r) > center) << 1;
+	//             code |= (src.at<_Tp>(i,j-r) > center) << 0;
+	//             dst.at<unsigned char>(i-y,j-x) = code;
+	//         }
+	//     }
+	// }
 
 	/*
 	* Creates histogram featurevector for src
@@ -76,29 +105,51 @@ public:
 	/* Wrapper function for LBP_ */
 	/* Based on code from https://github.com/bytefish/opencv/tree/master/lbp */
 	void LBP(const Mat& src, Mat& dst, int radius, int x, int y, int winSize) {
-	    switch(src.type()) {
-	        case CV_8SC1: _LBP<char>(src, dst, radius, x, y, winSize); break;
-	        case CV_8UC1: _LBP<unsigned char>(src, dst, radius, x, y, winSize); break;
-	        case CV_16SC1: _LBP<short>(src, dst, radius, x, y, winSize); break;
-	        case CV_16UC1: _LBP<unsigned short>(src, dst, radius, x, y, winSize); break;
-	        case CV_32SC1: _LBP<int>(src, dst, radius, x, y, winSize); break;
-	        case CV_32FC1: _LBP<float>(src, dst, radius, x, y, winSize); break;
-	        case CV_64FC1: _LBP<double>(src, dst, radius, x, y, winSize); break;
-	        default: cerr<<"Error in LBP : convert src to grayscale with valid type"<<endl;throw;
-	    }
+		const int UCHAR = CV_8UC(src.channels());
+		if(src.type()==UCHAR){
+			_LBP<unsigned char>(src, dst, radius, x, y, winSize);
+		}else{
+
+		    switch(src.type()) {
+		        case CV_8SC1: _LBP<char>(src, dst, radius, x, y, winSize); break;
+		        // case TYPE_CHAR: _LBP<unsigned char>(src, dst, radius, x, y, winSize); break;
+		        case CV_16SC1: _LBP<short>(src, dst, radius, x, y, winSize); break;
+		        case CV_16UC1: _LBP<unsigned short>(src, dst, radius, x, y, winSize); break;
+		        case CV_32SC1: _LBP<int>(src, dst, radius, x, y, winSize); break;
+		        case CV_32FC1: _LBP<float>(src, dst, radius, x, y, winSize); break;
+		        case CV_64FC1: _LBP<double>(src, dst, radius, x, y, winSize); break;
+		        default: cerr<<"Error in LBP : convert src to grayscale with valid type"<<endl;throw;
+		    }
+		}
 	}
 
 	/* Wrapper function for histogram_ */
 	/* Based on code from https://github.com/bytefish/opencv/tree/master/lbp */
 	void histogram(const Mat& src, vector<int>& hist, int numBins) {
-	    switch(src.type()) {
-	        case CV_8SC1: _histogram<char>(src, hist, numBins); break;
-	        case CV_8UC1: _histogram<unsigned char>(src, hist, numBins); break;
-	        case CV_16SC1: _histogram<short>(src, hist, numBins); break;
-	        case CV_16UC1: _histogram<unsigned short>(src, hist, numBins); break;
-	        case CV_32SC1: _histogram<int>(src, hist, numBins); break;
-	        default: cerr<<"Error in histogram : convert src to grayscale with valid type"<<endl;throw;
-	    }
+		const int UCHAR = CV_8UC(src.channels());
+		if(src.type()==UCHAR){
+			_histogram<unsigned char>(src, hist, numBins);
+		}else{
+
+		    switch(src.type()) {
+		        case CV_8SC1: _histogram<char>(src, hist, numBins); break;
+		        case CV_8UC1: _histogram<unsigned char>(src, hist, numBins); break;
+		        case CV_16SC1: _histogram<short>(src, hist, numBins); break;
+		        case CV_16UC1: _histogram<unsigned short>(src, hist, numBins); break;
+		        case CV_32SC1: _histogram<int>(src, hist, numBins); break;
+		        default: cerr<<"Error in histogram : convert src to grayscale with valid type"<<endl;throw;
+		    }
+		}
+	}
+
+	void featureVector(const Mat& src,vector<int>& fv){
+		vector<Mat> srcChnls(src.channels());
+		split(src,srcChnls);
+		for(int i=0;i<srcChnls.size();i++){
+			vector<int> hist;
+			histogram(srcChnls[i],hist,histBins);
+			fv.insert(fv.end(),hist.begin(),hist.end());
+		}
 	}
 
 	void processFrame(string fnFrame, Mat& img, Mat& featVectors){
@@ -124,7 +175,8 @@ public:
 
 		/* Convert to grayscale for processing */
 		Mat imGray;
-		cvtColor(img,imGray,CV_BGR2GRAY);
+		// cvtColor(img,imGray,CV_BGR2GRAY);
+		imGray = img;
 
 		/* Open new CSV-file for frame data in output directory */
 		string fn = io::dirOutput+frameName+"_data.csv";
@@ -136,7 +188,7 @@ public:
 		int isRoadThreshold = totalBlocks*0.6;
 
 
-		featVectors = Mat(totalBlocks+1,histBins,CV_32SC1);	
+		featVectors = Mat(totalBlocks+1,histBins*img.channels(),CV_32SC1);	
 
 		/* Process blocks in frame */
 		int blkIdx = -1;
@@ -163,7 +215,7 @@ public:
 
 		    /* Create histogram featurevector for LBP values of current block */
 		    vector<int> hist;
-		    histogram(lbpBlk,hist,histBins);
+		    featureVector(lbpBlk,hist);
 		    for(int i=0; i<hist.size();i++) {
 		    	featVectors.at<int>(blkIdx,i) = hist[i];
 		    }
@@ -185,7 +237,7 @@ public:
 
 		io::saveImage(frameName+"_testblocks",img);
 
-	    io::showImage(fnFrame,img,false);
+	    // io::showImage(fnFrame,img,false);
 	    waitKey(0);
 	    destroyWindow(fnFrame);
 	}

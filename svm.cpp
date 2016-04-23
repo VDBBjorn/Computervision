@@ -25,7 +25,7 @@ int main (int argc, char** argv){
 	vector<vector<int> > matrices;
 	vector<int> labels;
 
-	for(int f=0; f<=100; f+=10) {
+	for(int f=0; f<=0; f+=10) {
 
 	    char number[36];
 	    sprintf(number, "%05d", f);
@@ -64,21 +64,20 @@ int main (int argc, char** argv){
 		}
 	}
 
-	cout << labelsMat << endl << trainingsMat << endl;
+	// cout << labelsMat << endl << trainingsMat << endl;
 
 	// Train the SVM	    
     svm->train(trainingsMat, ROW_SAMPLE, labelsMat);
 	//svm->trainAuto()
     cout << "svm trained" << endl;
     // Show decision regions by the SVM
-    Mat image = imread("Dataset/02/frame00010.png", CV_LOAD_IMAGE_COLOR);
+    Mat image = imread("Dataset/01/frame00000.png", CV_LOAD_IMAGE_COLOR);
     //Mat::zeros(720, 1280, CV_8UC3);
     //Vec3b green(0,255,0), blue (255,0,0);
-
     LbpFeatureVector fv;
     Mat features;
     fv.processFrame("test-data", image, features);
-    image = imread("Dataset/02/frame00010.png", CV_LOAD_IMAGE_COLOR);
+    image = imread("Dataset/01/frame00000.png", CV_LOAD_IMAGE_COLOR);
     cout << "--------------------------------" << endl;
     cout << features << endl;
 
