@@ -21,11 +21,10 @@ int main (int argc, char** argv){
     LbpFeatureVector fv;
     /* */
 
-	// Use every 10th frame
 	vector<Mat> frames;
 	string frameRegex = "frame%05d.png";
 	io::read_images(datasetFolder,frameRegex,frames);
-
+	cout<<"#Frames: "<<frames.size()<<endl;
 	for(int i=0;i<frames.size();i+=5){
 		char fnFrame[14];
 		sprintf(fnFrame,frameRegex.c_str(),i);

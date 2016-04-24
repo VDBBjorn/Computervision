@@ -155,6 +155,7 @@ public:
 	void processFrame(string fnFrame, Mat& img, Mat& featVectors){
     	ostringstream strBldr; // Stringbuilder
 
+    	cout<<"Start processFrame "<<fnFrame<<endl;
     	/* Initial configuration */
 		blkX = outerMargin;
 		blkY = outerMargin;
@@ -238,8 +239,8 @@ public:
 		io::saveImage(frameName+"_testblocks",img);
 
 	    // io::showImage(fnFrame,img,false);
-	    waitKey(0);
-	    destroyWindow(fnFrame);
+	    // waitKey(0);
+	    // destroyWindow(fnFrame);
 	}
 };
 
