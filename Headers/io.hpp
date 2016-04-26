@@ -13,8 +13,9 @@ using namespace cv;
 
 namespace io {
 
-	/** Output directory **/
+	/** Directories **/
 	string dirOutput = "output/";
+	string dirTrainingsdata = "Trainingsdata/";
 
 	/** Shown image properties and helper values **/
 	int imX=50,imY=50
@@ -66,7 +67,7 @@ namespace io {
 	    }
 	}
 
-	void read_images(String folder, String regex, vector<Mat>& images) {
+	void readImages(String folder, String regex, vector<Mat>& images) {
 		VideoCapture cap(folder+"/"+regex);
 		images.clear();
 		while( cap.isOpened() )
@@ -90,6 +91,34 @@ namespace io {
 			addWeighted( masks[i] , alpha, frames[i], beta, 0.0, dst);
 			imshow( "Display window", dst );  
 			waitKey(0);
+		}
+	}
+
+	void readTrainingsdata(vector<short>& labels, vector<vector<int> >& featureVectors){
+		for(int f=0; f<=105; f+=5) {
+			cout<<"Reading trainingsdata of frame "<<f<<endl;
+		    char number[36];
+		    sprintf(number, "%05d", f);
+		    string fnLbl = dirTrainingsdata+"frame"+string(number)+"_labels.csv";
+		    string fnFv = dirTrainingsdata+"frame"+string(number)+"_featurevectors.csv";
+		 	ifstream ifsLbl(fnLbl.c_str());
+		 	ifstream ifsFv(fnFv.c_str());
+
+			string lineLbl,lineFv;
+			while( getline(ifsLbl,lineLbl) && getline(ifsFv,lineFv) ){
+				string strLbl = lineLbl.substr(lineLbl.find_first_of(',')+1);
+				labels.push_back(atoi(strLbl.c_str()));
+
+				size_t pos = lineFv.find_first_of('"')+1;
+				string strFv = lineFv.substr(pos);
+				stringstream ssFv(strFv);
+				vector<int> fvValues;
+				string strValue;
+				while(getline(ssFv,strValue,';')) {
+					fvValues.push_back(atoi(strValue.c_str()));
+				}
+				featureVectors.push_back(fvValues);
+			}
 		}
 	}
 }

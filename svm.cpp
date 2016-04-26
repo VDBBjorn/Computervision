@@ -22,34 +22,10 @@ int main (int argc, char** argv){
     svm->setKernel(SVM::POLY);
     svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
 
-	vector<vector<int> > matrices;
-	vector<int> labels;
+	vector<short> labels;
+	vector<vector<int> > featureVectors;
 
-	for(int f=0; f<=0; f+=10) {
-
-	    char number[36];
-	    sprintf(number, "%05d", f);
-	    string input = "output/frame"+string(number)+"_data-correct.csv";
-	    cout << input << endl;; 
-	 	ifstream file(input.c_str());
-		string value;
-		int i=0;
-		while(getline(file,value)) {
-			vector<string> line;
-			stringstream ss(value);
-			string item;
-			while(getline(ss,item,',')) {
-				line.push_back(item);
-			}
-			stringstream sst(string(line[1],1,line[1].length()-2));
-			vector<int> mat_values;
-			while(getline(sst,item,';')) {
-				mat_values.push_back(atoi(item.c_str()));
-			}
-			matrices.push_back(mat_values);
-			labels.push_back(atoi(line[2].c_str()));
-		}
-	}
+	io::readTrainingsdata(labels,featureVectors);
 
 	// Set up training data and labels
  	Mat labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
@@ -57,10 +33,10 @@ int main (int argc, char** argv){
 		labelsMat.at<int>(i,0) = labels[i];
 	}
 
- 	Mat trainingsMat = Mat::zeros(matrices.size(), matrices[0].size(), CV_32FC1);
-	for(int i = 0; i<matrices.size(); i++) {
-		for(int j=0; j<matrices[i].size(); j++) {
-			trainingsMat.at<float>(i,j) = matrices[i][j];
+ 	Mat trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
+	for(int i = 0; i<featureVectors.size(); i++) {
+		for(int j=0; j<featureVectors[i].size(); j++) {
+			trainingsMat.at<float>(i,j) = featureVectors[i][j];
 		}
 	}
 
@@ -69,17 +45,17 @@ int main (int argc, char** argv){
 	// Train the SVM	    
     svm->train(trainingsMat, ROW_SAMPLE, labelsMat);
 	//svm->trainAuto()
-    cout << "svm trained" << endl;
+    cout << "SVM trained" << endl;
+
+
     // Show decision regions by the SVM
-    Mat image = imread("Dataset/01/frame00000.png", CV_LOAD_IMAGE_COLOR);
-    //Mat::zeros(720, 1280, CV_8UC3);
-    //Vec3b green(0,255,0), blue (255,0,0);
+    string fnFrame = "Dataset/01/frame00000.png";
+    Mat image = imread(fnFrame, CV_LOAD_IMAGE_COLOR);
     LbpFeatureVector fv;
     Mat features;
-    fv.processFrame("test-data", image, features);
-    image = imread("Dataset/01/frame00000.png", CV_LOAD_IMAGE_COLOR);
-    cout << "--------------------------------" << endl;
-    cout << features << endl;
+    fv.processFrame(fnFrame, image, features);
+
+    // cout << features << endl;
 
     for(int i=0; i<features.rows; i++) {
     	Mat_<float> row = Mat(features, Rect(0,i,features.cols,1));
