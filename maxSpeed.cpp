@@ -92,30 +92,29 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         }
         
         //Intersectiepunt dichtst bij auto
-        int dichtste = 0;
-        int dichtsteIndex = 0;
+        float max;
+        int laagsteSnelheid = 90;
+        int laagsteSnelheidIndex = 0;
         for(int j = 0; j < intersections.size(); j++){
-            if(dichtste < intersections[j].y){
-                dichtste = intersections[j].y;
-                dichtsteIndex = j;
+            vec = masks[i].at<cv::Vec3b>(intersections[j].y,intersections[j].x);
+            max = vec[0];
+            cout << j << ": " << intersections[j].y << "," << intersections[j].x << " -> " << max << ";" <<laagsteSnelheid << endl;
+            if(laagsteSnelheid > max){
+                laagsteSnelheid = max;
+                laagsteSnelheidIndex = j;
             }
         }
-        float max;
+        
         if(intersections.size() != 0){
-            circle( dst, intersections[dichtsteIndex], 2, Scalar( 0,0,255 ),2);
-            
-            //Max speed
-            vec = masks[i].at<cv::Vec3b>(intersections[dichtsteIndex].y,intersections[dichtsteIndex].x);
-            max = vec[0];
-            
+            circle( dst, intersections[laagsteSnelheidIndex], 2, Scalar( 0,0,255 ),2);
         }
         else{
-            max = 90.0;
+            laagsteSnelheid = 90.0;
         }
         
         stringstream ss;
-        ss << "Max speed (zelf): " << max << " km/u, gtdistances: " << speeds[i] << " km/u";
-        if(max <= speeds[i])
+        ss << "Max speed (zelf): " << laagsteSnelheid << " km/u, gtdistances: " << speeds[i] << " km/u";
+        if(laagsteSnelheid <= speeds[i])
             putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,255,0 ), 1);
         else
             putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,0,255 ), 1);
