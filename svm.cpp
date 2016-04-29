@@ -17,9 +17,10 @@ using namespace cv::ml;
 int main (int argc, char** argv){
 	Ptr<SVM> svm = SVM::create();
     svm->setType(SVM::C_SVC);
-    svm->setDegree(2);
-    svm->setGamma(3); 
-    svm->setKernel(SVM::POLY);
+    //svm->setDegree(2);
+    // svm->setGamma(3); 
+    //svm->setNu(0.4);
+    svm->setKernel(SVM::RBF);
     svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
 
 	vector<short> labels;
@@ -40,16 +41,17 @@ int main (int argc, char** argv){
 		}
 	}
 
-	// cout << labelsMat << endl << trainingsMat << endl;
+	cout << labelsMat << endl << trainingsMat << endl;
 
 	// Train the SVM	    
-    svm->train(trainingsMat, ROW_SAMPLE, labelsMat);
-	//svm->trainAuto()
+    //svm->train(trainingsMat, ROW_SAMPLE, labelsMat);
+    Ptr<TrainData> trainData_ptr = TrainData::create(trainingsMat, ROW_SAMPLE , labelsMat);
+    svm->trainAuto(trainData_ptr);
     cout << "SVM trained" << endl;
 
 
     // Show decision regions by the SVM
-    string fnFrame = "Dataset/01/frame00000.png";
+    string fnFrame = "Dataset/01/frame00100.png";
     Mat image = imread(fnFrame, CV_LOAD_IMAGE_COLOR);
     LbpFeatureVector fv;
     Mat features;
