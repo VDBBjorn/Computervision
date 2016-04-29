@@ -50,32 +50,37 @@ int main (int argc, char** argv){
     cout << "SVM trained" << endl;
 
 
-    // Show decision regions by the SVM
-    string fnFrame = "Dataset/01/frame00100.png";
-    Mat image = imread(fnFrame, CV_LOAD_IMAGE_COLOR);
-    LbpFeatureVector fv;
-    Mat features;
-    fv.processFrame(fnFrame, image, features);
+    for(int f=0; f<=105; f+=1) {
+        char number[36];
+        sprintf(number, "%05d", f);
+        // Show decision regions by the SVM
+        string fnFrame = "Dataset/01/frame"+string(number)+".png";
+        Mat image = imread(fnFrame, CV_LOAD_IMAGE_COLOR);
+        LbpFeatureVector fv;
+        Mat features;
+        fv.processFrame(fnFrame, image, features);
 
-    // cout << features << endl;
+        // cout << features << endl;
 
-    for(int i=0; i<features.rows; i++) {
-    	Mat_<float> row = Mat(features, Rect(0,i,features.cols,1));
-    	int response = svm->predict(row);
-    	int red=0,green=0;
-    	int blkSize = 32;
-    	int blkX = (i%39)*blkSize;
-    	int blkY = (i/39)*blkSize;
-	    (response==1? green=255 : red=255);
-	    rectangle(image
-	        ,Point(blkX,blkY)
-	        ,Point(blkX+blkSize,blkY+blkSize)
-	        ,Scalar(0,green,red)
-	    );
+        for(int i=0; i<features.rows; i++) {
+        	Mat_<float> row = Mat(features, Rect(0,i,features.cols,1));
+        	int response = svm->predict(row);
+        	int red=0,green=0;
+        	int blkSize = 32;
+        	int blkX = (i%39)*blkSize;
+        	int blkY = (i/39)*blkSize;
+    	    (response==1? green=255 : red=255);
+    	    rectangle(image
+    	        ,Point(blkX,blkY)
+    	        ,Point(blkX+blkSize,blkY+blkSize)
+    	        ,Scalar(0,green,red)
+    	    );
+        }
+        imwrite("result.png", image);        // save the image
+        imshow("output", image); // show it to the user
+        waitKey(0);
+        destroyAllWindows();
     }
-    imwrite("result.png", image);        // save the image
-    imshow("output", image); // show it to the user
-    waitKey(0);
 
 	return 0;
 }

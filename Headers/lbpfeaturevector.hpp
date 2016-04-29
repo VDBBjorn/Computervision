@@ -26,9 +26,9 @@ private:
 	int lbpRadius;
 	int histBins;
 public:
-	LbpFeatureVector(): outerMargin(1),innerMargin(0),blkSize(32),lbpRadius(1),histBins(16){}
+	//LbpFeatureVector(): outerMargin(1),innerMargin(0),blkSize(32),lbpRadius(1),histBins(128){}
 
-	LbpFeatureVector(int _outerMargin,int _innerMargin,int _blkSize,int _lbpRadius,int _histBins):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){}
+	LbpFeatureVector(int _outerMargin=1,int _innerMargin=0,int _blkSize=32,int _lbpRadius=1,int _histBins=128):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){}
 
 	/* Calculate LBP values of pixels in src to dst, with radius r.
 	* Only calculate withing given window, measured by source coordinates (x,y) and winSize.
@@ -36,10 +36,10 @@ public:
 	*/
 	template <typename _Tp>
 	void _LBP(const Mat& src, Mat& dst, int r, int x, int y, int winSize) {
-	    if( x<r || y<r || x+winSize+r>src.cols || y+winSize+r>src.rows){
-	        cerr << "Error in _LBP : source coordinates and window size make radius exceed image size" << endl;
-	        throw;
-	    }
+	    // if( x<r || y<r || x+winSize+r>src.cols || y+winSize+r>src.rows){
+	    //     cerr << "Error in _LBP : source coordinates and window size make radius exceed image size" << endl;
+	    //     throw;
+	    // }
 	    dst = Mat::zeros(winSize, winSize, CV_8UC(src.channels()));
 	    vector<Mat> srcChnls(src.channels()) , dstChnls(src.channels());
 	    split(src,srcChnls);

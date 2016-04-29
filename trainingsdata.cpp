@@ -13,8 +13,8 @@ int main (int argc, char** argv){
 		datasetFolder = argv[1];
 
     /* Training data */
-    int outerMargin(16),innerMargin(64),blkSize(32),lbpRadius(1),histBins(16);
-    LbpFeatureVector fv(outerMargin,innerMargin,blkSize,lbpRadius,histBins);
+    int outerMargin(16),innerMargin(64);
+    LbpFeatureVector fv(outerMargin,innerMargin);
 
 	vector<Mat> frames;
 	string frameRegex = "frame%05d.png";
