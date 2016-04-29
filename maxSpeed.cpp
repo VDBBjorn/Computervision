@@ -121,8 +121,8 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         
         
         /// Show in a window
-        namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-        imshow( "Contours", dst );
+        namedWindow( "Max Speed", CV_WINDOW_AUTOSIZE );
+        imshow( "Max Speed", dst );
         waitKey(0);
     }
 }
