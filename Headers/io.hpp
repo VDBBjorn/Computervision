@@ -94,30 +94,41 @@ namespace io {
 		}
 	}
 
+	bool file_exists(const string& name) {
+		struct stat buffer;   
+		return (stat (name.c_str(), &buffer) == 0); 
+	}
+
 	void readTrainingsdata(vector<short>& labels, vector<vector<int> >& featureVectors){
-		for(int f=0; f<=105; f+=5) {
-			cout<<"Reading trainingsdata of frame "<<f<<endl;
-		    char number[36];
-		    sprintf(number, "%05d", f);
-		    string fnLbl = dirTrainingsdata+"frame"+string(number)+"_labels.csv";
-		    string fnFv = dirTrainingsdata+"frame"+string(number)+"_featurevectors.csv";
-		 	ifstream ifsLbl(fnLbl.c_str());
-		 	ifstream ifsFv(fnFv.c_str());
+		for(int s=1;s<=1;s++) {
+		    char folder[36];
+		    sprintf(folder, "%02d",s);
+			for(int f=0; f<=200; f+=5) {
+			    char number[36];
+			    sprintf(number, "%05d", f);
+			    string fnLbl = dirTrainingsdata+string(folder)+"frame"+string(number)+"_labels.csv";
+			    string fnFv = dirTrainingsdata+string(folder)+"frame"+string(number)+"_featurevectors.csv";
+			    if(file_exists(fnLbl) && file_exists(fnFv)) {
+					cout<<"Reading trainingsdata of frame "<<string(folder)+"frame"+string(number)<<endl;
+				 	ifstream ifsLbl(fnLbl.c_str());
+				 	ifstream ifsFv(fnFv.c_str());
 
-			string lineLbl,lineFv;
-			while( getline(ifsLbl,lineLbl) && getline(ifsFv,lineFv) ){
-				string strLbl = lineLbl.substr(lineLbl.find_first_of(',')+1);
-				labels.push_back(atoi(strLbl.c_str()));
+					string lineLbl,lineFv;
+					while( getline(ifsLbl,lineLbl) && getline(ifsFv,lineFv) ){
+						string strLbl = lineLbl.substr(lineLbl.find_first_of(',')+1);
+						labels.push_back(atoi(strLbl.c_str()));
 
-				size_t pos = lineFv.find_first_of('"')+1;
-				string strFv = lineFv.substr(pos);
-				stringstream ssFv(strFv);
-				vector<int> fvValues;
-				string strValue;
-				while(getline(ssFv,strValue,';')) {
-					fvValues.push_back(atoi(strValue.c_str()));
+						size_t pos = lineFv.find_first_of('"')+1;
+						string strFv = lineFv.substr(pos);
+						stringstream ssFv(strFv);
+						vector<int> fvValues;
+						string strValue;
+						while(getline(ssFv,strValue,';')) {
+							fvValues.push_back(atoi(strValue.c_str()));
+						}
+						featureVectors.push_back(fvValues);
+					}
 				}
-				featureVectors.push_back(fvValues);
 			}
 		}
 	}

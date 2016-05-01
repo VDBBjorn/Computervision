@@ -6,6 +6,7 @@ if [ $# != 1 ]; then
 	echo "Use: openCvCmake.bash [projectName]">&2
 	exit 1
 fi
+sudo rm -rf CMake*
 projectName=$1
 touch $projectName
 if [ ! -f CMakeLists.txt ]; then
@@ -25,3 +26,4 @@ cmake ..
 make
 cp $projectName ../
 cd ..
+chmod u+x $projectName 
