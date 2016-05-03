@@ -17,6 +17,8 @@ namespace io {
 	const string dirOutput = "output/";
 	const string dirTrainingsdata = "Trainingsdata/";
 	const int KEY_ESCAPE = 537919515;
+	const int KEY_ENTER = 537919498;
+	const int KEY_B = 537919498;
 
 	/** Shown image properties and helper values **/
 	int imX=50,imY=50
@@ -24,27 +26,35 @@ namespace io {
 		,consecutiveImages=6
 		,normalSize=325;
 
-	void showImage(string windowName,Mat& img, bool resize=true, int imWidth=0, int imHeight=0){
+	map<string,vector<int> > imgPos;
+
+	void showImage(string windowName,Mat& img, bool resize=false){
 	    int windowFlag, xSize, ySize, margin=3;
 	    if(resize){
 	        windowFlag = WINDOW_NORMAL;
 	        xSize = ySize = normalSize;
 	    } else {
 	        windowFlag = WINDOW_AUTOSIZE;
-	        xSize = imWidth;
-	        ySize = imHeight;
+	        xSize = img.cols;
+	        ySize = img.rows;
 	    }
 
 	    namedWindow(windowName,windowFlag);
 	    imshow(windowName, img);
-	    moveWindow(windowName,imX,imY);
+	    if(imgPos[windowName].empty()){
+	    	imgPos[windowName] = vector<int>(2);
+	    	imgPos[windowName][0]=imX;
+	    	imgPos[windowName][1]=imY;
+	    	moveWindow(windowName,imX,imY);
+	    }
 	    imX += xSize+margin;
 	    if(++shownImages%consecutiveImages == 0){
+	    	imX = 50;
 	    	imY += ySize+margin;
 	    }
 	}
 
-	void saveImage(string fn, Mat& img){
+	void saveImage(const string fn, const Mat& img){
 	    imwrite(dirOutput+fn+".png",img);
 	}
 

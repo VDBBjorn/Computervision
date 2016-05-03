@@ -30,6 +30,11 @@ public:
 
 	LbpFeatureVector(int _outerMargin=1,int _innerMargin=0,int _blkSize=32,int _lbpRadius=1,int _histBins=128):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){}
 
+	int getOuterMargin(){ return outerMargin;}
+	int getInnerMargin(){ return innerMargin;}
+	int getBlkSize(){ return blkSize;}
+
+
 	/* Calculate LBP values of pixels in src to dst, with radius r.
 	* Only calculate withing given window, measured by source coordinates (x,y) and winSize.
 	* Based on lbp code from https://github.com/bytefish/opencv/tree/master/lbp
@@ -152,6 +157,20 @@ public:
 		}
 	}
 
+	const void incrementBlkCoordinates(int& blkX,int& blkY,const int imWidth){
+	    blkX += blkSize+innerMargin;
+	    if(blkX+blkSize+outerMargin > imWidth){
+	        blkX = outerMargin;
+	        blkY += blkSize+innerMargin;
+	    }
+	}
+
+	const bool validateBlkCoordinates(const int blkX,const int blkY,const int imWidth,const int imHeight){
+		return (
+			blkX+blkSize+outerMargin < imWidth && blkY+blkSize+outerMargin < imHeight
+			);
+	}
+
 	/*
 	* Processes frame fnFrame to generate featurevectors according to set parameters in this instance of LbpFeatureVector.
 	* Each row of featVectors will contain a featurevector of a block.
@@ -159,8 +178,6 @@ public:
 	* along with a copy of the frame with the blocks drawn on top of it.
 	*/
 	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool isTrainingsdata=false){
-    	ostringstream strBldr; // Stringbuilder
-
     	cout<<"Start processFrame "<<fnFrame<<endl;
     	/* Initial configuration */
 		blkX = outerMargin;
@@ -171,36 +188,28 @@ public:
     	Mat dst;
     	if(isTrainingsdata) img.copyTo(dst);
 
-		size_t pos = fnFrame.find_last_of("/")+1;
-		if(pos == string::npos) pos=0;
-		string frameName = fnFrame.substr(pos,fnFrame.size()-pos-4); // Remove folder prefixes and file extension
-		
 		int imWidth=img.cols;
 		int imHeight=img.rows;
 
 		io::checkDir(io::dirOutput);
+		size_t pos1 = fnFrame.find_last_of("/")+1;
+		if(pos1 == string::npos) pos1=0;
+		size_t pos2 = fnFrame.find_last_of(".");
+		if(pos2 == string::npos) pos2=fnFrame.size();
+		string frameName = fnFrame.substr(pos1,pos2-pos1); // Remove folder prefixes and file extension
 
-		/* Open new CSV-files for frame data in output directory */
-		ofstream fosLbl, fosFv;
-		if(isTrainingsdata){
-			string fnLbl = io::dirOutput+frameName+"_labels.csv";
-			string fnFv = io::dirOutput+frameName+"_featurevectors.csv";
-			fosLbl.open(fnLbl.c_str(),ios::out);
-			fosFv.open(fnFv.c_str(),ios::out);
-		}
 
 		// Number of blocks in width and height
 		int numBlksWidth = (imWidth-2*outerMargin-blkSize)/(innerMargin+blkSize) + 1;
 		int numBlksHeight = (imHeight-2*outerMargin-blkSize)/(innerMargin+blkSize) + 1;
-		int totalBlocks = numBlksWidth*numBlksHeight - 1; // -1 Accounts for 0-indexing
-		int isRoadThreshold = totalBlocks*0.6;
+		int totalBlocks = numBlksWidth*numBlksHeight;
+		int isRoadThreshold = (totalBlocks-1)*0.6;
 
-
-		featVectors = Mat(totalBlocks+1,histBins*img.channels(),CV_32SC1);	
+		featVectors = Mat(totalBlocks,histBins*img.channels(),CV_32SC1);	
 
 		/* Process blocks in frame */
 		int blkIdx = -1;
-		while(blkX+blkSize+outerMargin < imWidth && blkY+blkSize+outerMargin < imHeight){
+		while( validateBlkCoordinates(blkX,blkY,imWidth,imHeight) ){
 		    blkIdx++;
 
 		    /* Calculate LBP values for current block */
@@ -214,41 +223,8 @@ public:
 		    	featVectors.at<int>(blkIdx,i) = hist[i];
 		    }
 
-		    if(isTrainingsdata){
-			    bool isRoad = (blkIdx>isRoadThreshold); // First/upper 60% of blocks is likely not road
-
-			    /* Draw rectangle with block index */
-			    int red=0,green=0;
-			    isRoad? green=255 : red=255;
-			    rectangle(dst
-			        ,Point(blkX,blkY)
-			        ,Point(blkX+blkSize,blkY+blkSize)
-			        ,Scalar(0,green,red)
-			    );
-
-			    Point blkCenter(blkX+blkSize/2-5,blkY+blkSize/2+5);
-			    strBldr.str(""); strBldr<<blkIdx;
-			    putText(dst,strBldr.str(),blkCenter,FONT_HERSHEY_PLAIN,1,Scalar(0,green,red));
-
-			    /* Write data to CSV-files */
-			    fosLbl<<blkIdx<<","<<(isRoad? 1: -1)<<endl;
-
-			    fosFv<<blkIdx<<",\"";
-			    io::printVector(fosFv,hist);
-			    fosFv<<"\""<<endl;
-			}
-
-		    /* Increment block coordinates */
-		    blkX += blkSize+innerMargin;
-		    if(blkX+blkSize+outerMargin > imWidth){
-		        blkX = outerMargin;
-		        blkY += blkSize+innerMargin;
-		    }
+		    incrementBlkCoordinates(blkX,blkY,imWidth);
 		}
-		fosLbl.close();
-		fosFv.close();
-
-		if(isTrainingsdata) io::saveImage(frameName+"_blocks",dst);
 	}
 };
 
