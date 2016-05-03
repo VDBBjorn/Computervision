@@ -82,43 +82,66 @@ public:
 	/* Wrapper function for LBP_ */
 	/* Based on code from https://github.com/bytefish/opencv/tree/master/lbp */
 	void LBP(const Mat& src, Mat& dst, int radius, int x, int y, int winSize) {
-		const int UCHAR = CV_8UC(src.channels());
-		if(src.type()==UCHAR){
+		const int CHAR 		= CV_8SC(src.channels());
+		const int UCHAR 	= CV_8UC(src.channels());
+		const int SHORT 	= CV_16SC(src.channels());
+		const int USHORT 	= CV_16UC(src.channels());
+		const int INT 		= CV_32SC(src.channels());
+		const int FLOAT 	= CV_32FC(src.channels());
+		const int DOUBLE 	= CV_64FC(src.channels());
+		if(src.type()==CHAR){
+			_LBP<char>(src, dst, radius, x, y, winSize);
+		}else if(src.type()==UCHAR){
 			_LBP<unsigned char>(src, dst, radius, x, y, winSize);
+		}else if(src.type()==SHORT){
+			_LBP<short>(src, dst, radius, x, y, winSize);
+		}else if(src.type()==USHORT){
+			_LBP<unsigned short>(src, dst, radius, x, y, winSize);
+		}else if(src.type()==INT){
+			_LBP<int>(src, dst, radius, x, y, winSize);
+		}else if(src.type()==FLOAT){
+			_LBP<float>(src, dst, radius, x, y, winSize);
+		}else if(src.type()==DOUBLE){
+			_LBP<double>(src, dst, radius, x, y, winSize);
 		}else{
-
-		    switch(src.type()) {
-		        case CV_8SC1: _LBP<char>(src, dst, radius, x, y, winSize); break;
-		        // case TYPE_CHAR: _LBP<unsigned char>(src, dst, radius, x, y, winSize); break;
-		        case CV_16SC1: _LBP<short>(src, dst, radius, x, y, winSize); break;
-		        case CV_16UC1: _LBP<unsigned short>(src, dst, radius, x, y, winSize); break;
-		        case CV_32SC1: _LBP<int>(src, dst, radius, x, y, winSize); break;
-		        case CV_32FC1: _LBP<float>(src, dst, radius, x, y, winSize); break;
-		        case CV_64FC1: _LBP<double>(src, dst, radius, x, y, winSize); break;
-		        default: cerr<<"Error in LBP : convert src to grayscale with valid type"<<endl;throw;
-		    }
+			cerr<<"Error in LBP : convert src to grayscale with valid type"<<endl;throw;
 		}
 	}
 
 	/* Wrapper function for histogram_ */
 	/* Based on code from https://github.com/bytefish/opencv/tree/master/lbp */
 	void histogram(const Mat& src, vector<int>& hist, int numBins) {
-		const int UCHAR = CV_8UC(src.channels());
-		if(src.type()==UCHAR){
+		const int CHAR 		= CV_8SC(src.channels());
+		const int UCHAR 	= CV_8UC(src.channels());
+		const int SHORT 	= CV_16SC(src.channels());
+		const int USHORT 	= CV_16UC(src.channels());
+		const int INT 		= CV_32SC(src.channels());
+		const int FLOAT 	= CV_32FC(src.channels());
+		const int DOUBLE 	= CV_64FC(src.channels());
+		if(src.type()==CHAR){
+			_histogram<char>(src, hist, numBins);
+		}else if(src.type()==UCHAR){
 			_histogram<unsigned char>(src, hist, numBins);
+		}else if(src.type()==SHORT){
+			_histogram<short>(src, hist, numBins);
+		}else if(src.type()==USHORT){
+			_histogram<unsigned short>(src, hist, numBins);
+		}else if(src.type()==INT){
+			_histogram<int>(src, hist, numBins);
+		}else if(src.type()==FLOAT){
+			_histogram<float>(src, hist, numBins);
+		}else if(src.type()==DOUBLE){
+			_histogram<double>(src, hist, numBins);
 		}else{
-
-		    switch(src.type()) {
-		        case CV_8SC1: _histogram<char>(src, hist, numBins); break;
-		        case CV_8UC1: _histogram<unsigned char>(src, hist, numBins); break;
-		        case CV_16SC1: _histogram<short>(src, hist, numBins); break;
-		        case CV_16UC1: _histogram<unsigned short>(src, hist, numBins); break;
-		        case CV_32SC1: _histogram<int>(src, hist, numBins); break;
-		        default: cerr<<"Error in histogram : convert src to grayscale with valid type"<<endl;throw;
-		    }
+			cerr<<"Error in histogram : convert src to grayscale with valid type"<<endl;throw;
 		}
 	}
 
+	/*
+	* Generates a featurevector for the image.
+	* Histograms of pixel values are calculated per channel and are appended to one another,
+	* which makes up the featurevector.
+	*/
 	void featureVector(const Mat& src,vector<int>& fv){
 		vector<Mat> srcChnls(src.channels());
 		split(src,srcChnls);

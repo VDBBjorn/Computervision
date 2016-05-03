@@ -13,9 +13,10 @@ using namespace cv;
 
 namespace io {
 
-	/** Directories **/
-	string dirOutput = "output/";
-	string dirTrainingsdata = "Trainingsdata/";
+	/** Constants **/
+	const string dirOutput = "output/";
+	const string dirTrainingsdata = "Trainingsdata/";
+	const int KEY_ESCAPE = 537919515;
 
 	/** Shown image properties and helper values **/
 	int imX=50,imY=50

@@ -43,12 +43,14 @@ public:
 	    Ptr<TrainData> trainData_ptr = TrainData::create(trainingsMat, ROW_SAMPLE , labelsMat);
 	    svm->trainAuto(trainData_ptr);
 	    cout << "SVM trained" << endl;
+	    printParams(cout);
 		confusion = Mat::zeros(2,2, CV_32S);
 		precision = 0.0;
 	}
 
 	double get_precision();
 	void test(int, int, int, int);
+	void printParams(ostream&);
 
 };
 
@@ -83,6 +85,7 @@ double my_svm::get_precision() {
  * param number: number of frames to test on (default = 5)
 **/
 void my_svm::test(int min = 1, int max = 4, int skip = 5, int number = 5) {
+	int keyboard = -1;
     for(int ds=min; ds<=max; ds++) {
         char dsnumber[36];
         sprintf(dsnumber, "%02d", ds);
@@ -113,9 +116,22 @@ void my_svm::test(int min = 1, int max = 4, int skip = 5, int number = 5) {
                 );
             }
             imshow("output", image); // show it to the user
-            waitKey(0);
-            destroyAllWindows();
+			
+			if((keyboard=waitKey(0)) == io::KEY_ESCAPE)
+				break;
         }
-    }   
+    }
+    destroyAllWindows();
+}
+
+void my_svm::printParams(ostream& os){
+	os<<"--- Params ---"<<endl;
+	os<<"C:\t\t"<<				svm->getC()<<endl;
+	os<<"Class weights:\t"<<	svm->getClassWeights()<<endl;
+	os<<"Coef0:\t\t"<<			svm->getCoef0()<<endl;
+	os<<"Degree:\t\t"<<			svm->getDegree()<<endl;
+	os<<"Gamma:\t\t"<<			svm->getGamma()<<endl;
+	os<<"Nu:\t\t"<<				svm->getNu()<<endl;
+	os<<"P:\t\t"<<				svm->getP()<<endl;
 }
 #endif
