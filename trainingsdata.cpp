@@ -8,12 +8,17 @@ using namespace cv;
 
 const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/", "Dataset/03/", "Dataset/04/" };
 
-void generateLabels(vector<bool>& isRoad, int totalBlocks){
-	int isRoadThreshold = (totalBlocks-1)*0.6; // First/upper 60% of blocks is likely not road
-	isRoad = vector<bool>(totalBlocks);
+void generateLabels(string frameName, vector<bool>& isRoad, int totalBlocks){
+	string fnLabels(io::dirOutput+frameName+io::labelsPostfix);
+	if(io::file_exists(fnLabels)){
+		io::readFrameLabels(fnLabels,isRoad);
+	}else{
+		int isRoadThreshold = (totalBlocks-1)*0.6; // First/upper 60% of blocks is likely not road
+		isRoad = vector<bool>(totalBlocks);
 
-	for(int blkIdx=0;blkIdx<totalBlocks;blkIdx++)
-		isRoad[blkIdx] = (blkIdx>isRoadThreshold);
+		for(int blkIdx=0;blkIdx<totalBlocks;blkIdx++)
+			isRoad[blkIdx] = (blkIdx>isRoadThreshold);
+	}
 }
 
 static void onMouse( int event, int x, int y, int, void* param){
@@ -23,6 +28,14 @@ static void onMouse( int event, int x, int y, int, void* param){
     int* coordinates = (int*) param;
     coordinates[0] = x;
     coordinates[1] = y;
+}
+
+void fileToFrameName(string fnFrame, string& frameName){
+	size_t pos1 = fnFrame.find_last_of("/")+1;
+	if(pos1 == string::npos) pos1=0;
+	size_t pos2 = fnFrame.find_last_of(".");
+	if(pos2 == string::npos) pos2=fnFrame.size();
+	frameName = fnFrame.substr(pos1,pos2-pos1); // Remove folder prefixes and file extension
 }
 
 void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
@@ -36,12 +49,8 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 	blkX = blkY = outerMargin;
 	blkSize = fv.getBlkSize();
 
-	/* Retrieve and draw initial block labeling */
+	/* Draw initial block labeling */
 	for(int blkIdx=0; blkIdx<isRoad.size() && fv.validateBlkCoordinates(blkX,blkY,imWidth,imHeight); blkIdx++,fv.incrementBlkCoordinates(blkX,blkY,imWidth)){
-		/* label values > 0 are assumed to indicate this block is road */
-		isRoad[blkIdx] = (isRoad[blkIdx]>0);
-
-		/* Draw rectangle with block index */
 		int red=0,green=0;
 		isRoad[blkIdx]? green=255 : red=255;
 		rectangle(img
@@ -61,7 +70,7 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 	*/
 	int input = -1; // Keyboard input
 	int coordinates[2] = {-1,-1}; // Clicked coordinates to flip label
-	int blksInWidth = (imWidth-2*outerMargin)/(innerMargin+blkSize); // Helper value
+	int blksInWidth = (imWidth-2*outerMargin-blkSize)/(innerMargin+blkSize) + 1; // Helper value
 	string windowName = "Relabeling";
 	io::showImage(windowName,img,false);
 	setMouseCallback(windowName,onMouse,coordinates);
@@ -83,8 +92,10 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 			if( x > blkX && y > blkY && x < blkX+blkSize && y < blkY+blkSize){ // Ignore clicks outside of block
 				/* Flip label value */
 				isRoad[blkIdx] = !isRoad[blkIdx];
+				cout<<"(x,y):("<<x<<","<<y<<") ; idx(w,h):("<<blkIdxWidth<<","<<blkIdxHeight<<") ; blkIdx:"<<blkIdx<<endl;
+				cout<<"Changed "<<blkIdx<<" to "<<isRoad[blkIdx]<<endl;
 
-				/* Repaint img */
+				/* Repaint block and index on img */
 				int red=0,green=0;
 				isRoad[blkIdx]? green=255 : red=255;
 				rectangle(img
@@ -92,6 +103,10 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 				    ,Point(blkX+blkSize,blkY+blkSize)
 				    ,Scalar(0,green,red)
 				);
+
+				Point blkCenter(blkX+blkSize/2-5,blkY+blkSize/2+5);
+				strBldr.str(""); strBldr<<blkIdx;
+				putText(img,strBldr.str(),blkCenter,FONT_HERSHEY_PLAIN,1,Scalar(0,green,red));
 			}
 
 			coordinates[0] = -1;
@@ -100,18 +115,14 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 		io::showImage(windowName,img,false);
 		input=waitKey(50);
 	}
+	// cout<<"isRoad labeling"<<endl; io::printVector(cout,isRoad); cout<<endl;
 }
 
-void saveFrameOutput(const string fnFrame, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad){
+void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad){
 	vector<short> labels(isRoad.size());
 	for(int i=0;i<isRoad.size();i++)
 		labels[i] = (isRoad[i]? 1 : -1);
-
-	size_t pos1 = fnFrame.find_last_of("/")+1;
-	if(pos1 == string::npos) pos1=0;
-	size_t pos2 = fnFrame.find_last_of(".");
-	if(pos2 == string::npos) pos2=fnFrame.size();
-	string frameName = fnFrame.substr(pos1,pos2-pos1); // Remove folder prefixes and file extension
+	// cout<<"isRoad saving "<<frameName<<endl; io::printVector(cout,isRoad); cout<<endl;
 
 	io::checkDir(io::dirOutput);
 
@@ -155,17 +166,17 @@ void parameterIteration(){
 
 	    char buffer[30];
 	    sprintf(buffer,"%02dframe%05d_%03d_%02d",1,0,innerMargin[iMIdx],blkSize[bSIdx]);
-	    string fnFrame = string(buffer);
-	    fv.processFrame(fnFrame,frame,featureVectors,true);
+	    string frameName = string(buffer);
+	    fv.processFrame(frameName,frame,featureVectors,true);
 
 	    vector<bool> isRoad;
-	    generateLabels(isRoad,featureVectors.rows);
+	    generateLabels(frameName,isRoad,featureVectors.rows);
 
 	    Mat frameWithBlocks;
 	    frame.copyTo(frameWithBlocks);
 	    guiLabeling(fv,frameWithBlocks,isRoad);
 
-	    saveFrameOutput(fnFrame,frameWithBlocks,featureVectors,isRoad);
+	    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
 
 	    destroyAllWindows();
 	}
@@ -181,19 +192,22 @@ void fullTraining(bool relabel=false){
 	for(int s=0; s<sizeof(datasetFolders)/sizeof(string); s++) {
 		io::readImages(datasetFolders[s],frameRegex,frames);
 		for(int i=0;i<frames.size();i+=5){
-			char buffer[14];
+			char buffer[30];
 			sprintf(buffer,("%02d"+frameRegex).c_str(),s+1,i);
 			string fnFrame = string(buffer);
 			Mat featureVectors;
 			fv.processFrame(fnFrame,frames[i],featureVectors,true);
 
+			string frameName;
+			fileToFrameName(fnFrame,frameName);
+
 			vector<bool> isRoad;
 			if(relabel)
 				guiLabeling(fv,frames[i],isRoad);
 			else
-				generateLabels(isRoad,featureVectors.rows);
+				generateLabels(frameName,isRoad,featureVectors.rows);
 
-			saveFrameOutput(fnFrame,frames[i],featureVectors,isRoad);
+			saveFrameOutput(frameName,frames[i],featureVectors,isRoad);
 		}
 	}
 }

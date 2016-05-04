@@ -158,6 +158,22 @@ namespace io {
 			}
 		}
 	}
+
+	void readFrameLabels(string fnLbl, vector<bool>& isRoad){
+		if(!file_exists(fnLbl)){
+			cerr<<"Trying to read file that doesn't exist: "<<fnLbl<<endl;
+			throw;
+		}
+
+	 	ifstream ifsLbl(fnLbl.c_str());
+	 	string lineLbl;
+	 	while( getline(ifsLbl,lineLbl) ){
+			string strLbl = lineLbl.substr(lineLbl.find_first_of(',')+1);
+			isRoad.push_back(
+				( atoi(strLbl.c_str()) > 0 )
+			);
+	 	}
+	}
 }
 
 #endif
