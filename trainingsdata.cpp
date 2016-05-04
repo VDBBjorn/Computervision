@@ -92,8 +92,6 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 			if( x > blkX && y > blkY && x < blkX+blkSize && y < blkY+blkSize){ // Ignore clicks outside of block
 				/* Flip label value */
 				isRoad[blkIdx] = !isRoad[blkIdx];
-				cout<<"(x,y):("<<x<<","<<y<<") ; idx(w,h):("<<blkIdxWidth<<","<<blkIdxHeight<<") ; blkIdx:"<<blkIdx<<endl;
-				cout<<"Changed "<<blkIdx<<" to "<<isRoad[blkIdx]<<endl;
 
 				/* Repaint block and index on img */
 				int red=0,green=0;
@@ -153,33 +151,37 @@ void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featur
 	io::saveImage(frameName+"_blocks",frame);
 }
 
-void parameterIteration(){
+void parameterIterationTraining(){
     int outerMargin(16),lbpRadius(1),histBins(128);
     int innerMargin[] = {64};
     int blkSize[] = {8,16,32};
-    Mat frame = imread(datasetFolders[0]+"frame00000.png");
+    int dataset[] = {1,2};
 
-    for(int iMIdx=0;iMIdx<sizeof(innerMargin)/sizeof(int);iMIdx++){
-    for(int bSIdx=0;bSIdx<sizeof(blkSize)/sizeof(int);bSIdx++){
-	    LbpFeatureVector fv(outerMargin,innerMargin[iMIdx],blkSize[bSIdx],lbpRadius,histBins);
-	    Mat featureVectors;
+    for(int dSIdx=0;dSIdx<sizeof(dataset)/sizeof(int);dSIdx++){
+	    Mat frame = imread(datasetFolders[dataset[dSIdx]-1]+"frame00000.png");
 
-	    char buffer[30];
-	    sprintf(buffer,"%02dframe%05d_%03d_%02d",1,0,innerMargin[iMIdx],blkSize[bSIdx]);
-	    string frameName = string(buffer);
-	    fv.processFrame(frameName,frame,featureVectors,true);
+	    for(int iMIdx=0;iMIdx<sizeof(innerMargin)/sizeof(int);iMIdx++){
+	    for(int bSIdx=0;bSIdx<sizeof(blkSize)/sizeof(int);bSIdx++){
+		    LbpFeatureVector fv(outerMargin,innerMargin[iMIdx],blkSize[bSIdx],lbpRadius,histBins);
+		    Mat featureVectors;
 
-	    vector<bool> isRoad;
-	    generateLabels(frameName,isRoad,featureVectors.rows);
+		    char buffer[30];
+		    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset[dSIdx],0,innerMargin[iMIdx],blkSize[bSIdx]);
+		    string frameName = string(buffer);
+		    fv.processFrame(frameName,frame,featureVectors,true);
 
-	    Mat frameWithBlocks;
-	    frame.copyTo(frameWithBlocks);
-	    guiLabeling(fv,frameWithBlocks,isRoad);
+		    vector<bool> isRoad;
+		    generateLabels(frameName,isRoad,featureVectors.rows);
 
-	    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
+		    Mat frameWithBlocks;
+		    frame.copyTo(frameWithBlocks);
+		    guiLabeling(fv,frameWithBlocks,isRoad);
 
-	    destroyAllWindows();
-	}
+		    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
+
+		    destroyAllWindows();
+		}
+		}
 	}
 }
 
@@ -213,7 +215,7 @@ void fullTraining(bool relabel=false){
 }
 
 int main (int argc, char** argv){
-	parameterIteration();
+	parameterIterationTraining();
 	// fullTraining();
 
     return 0;
