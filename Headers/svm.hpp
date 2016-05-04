@@ -23,32 +23,33 @@ private:
 	double precision;
 
 public:
-	my_svm(vector<short> & labels, vector<vector<int> > & featureVectors) {
-		io::readTrainingsdata(labels,featureVectors);
+	my_svm(vector<short>& datasets) {
+		io::readTrainingsdata(datasets,labelsMat,trainingsMat);
 		svm = SVM::create();
 	    svm->setType(SVM::C_SVC);
 	    svm->setKernel(SVM::RBF);
 	    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
-		labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
-	 	for(int i=0; i<labels.size();i++) {
-			labelsMat.at<int>(i,0) = labels[i];
-		}
-		trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
-		for(int i = 0; i<featureVectors.size(); i++) {
-			for(int j=0; j<featureVectors[i].size(); j++) {
-				trainingsMat.at<float>(i,j) = featureVectors[i][j];
-			}
-		}
-		cout << "training the SVM... (this could take a while...)" << endl;
 	    Ptr<TrainData> trainData_ptr = TrainData::create(trainingsMat, ROW_SAMPLE , labelsMat);
+	    /* Automatic training *
+		cout << "training the SVM... (this could take a while...)" << endl;
 	    svm->trainAuto(trainData_ptr);
 	    cout << "SVM trained" << endl;
+	    /* */
+	    /* Hardcoded params */
+	    svm->setC(0.1);
+	    svm->setCoef0(0);
+	    svm->setDegree(0);
+	    svm->setGamma(0.00015);
+	    svm->setNu(0);
+	    svm->setP(0);
+	    svm->train(trainData_ptr);
+	    /* */
 	    printParams(cout);
 		confusion = Mat::zeros(2,2, CV_32S);
 		precision = 0.0;
 	}
 
-	double get_precision();
+	double get_precision(Mat&, Mat&);
 	void test(int, int, int, int);
 	void printParams(ostream&);
 
@@ -57,11 +58,11 @@ public:
 /**
  * Returns precision of the SVM on the given dataset after training
 **/
-double my_svm::get_precision() {
+double my_svm::get_precision(Mat& extLabels, Mat& extTrainingsMat) {
 	if(precision == 0) {
-		for(int i=0; i<trainingsMat.rows;i++) {
-		    Mat value = trainingsMat.row(i);
-		    int label = labelsMat.at<int>(i,0);
+		for(int i=0; i<extTrainingsMat.rows;i++) {
+		    Mat value = extTrainingsMat.row(i);
+		    int label = extLabels.at<int>(i,0);
 		    int predicted = svm->predict(value);
 		    if(label==1 && predicted == 1) {
 		        confusion.at<int>(0,0)++;
@@ -73,8 +74,10 @@ double my_svm::get_precision() {
 		        confusion.at<int>(label==-1 ? 0,1 : 1,0)++;
 		    }
 		}
-		precision = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)trainingsMat.rows)*100;
+		precision = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows)*100;
 	}
+	cout<<"Confusion matrix: "<<endl;
+	cout<<confusion<<endl;
 	return precision;
 }
 

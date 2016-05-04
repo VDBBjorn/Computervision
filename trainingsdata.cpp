@@ -117,8 +117,8 @@ void saveFrameOutput(const string fnFrame, const Mat& frame, const Mat& featureV
 
 	/* Open new CSV-files for frame data in output directory */
 	ofstream fosLbl, fosFv;
-	string fnLbl = io::dirOutput+frameName+"_labels.csv";
-	string fnFv = io::dirOutput+frameName+"_featurevectors.csv";
+	string fnLbl = io::dirOutput+frameName+io::labelsPostfix;
+	string fnFv = io::dirOutput+frameName+io::featVecsPostfix;
 	fosLbl.open(fnLbl.c_str(),ios::out);
 	fosFv.open(fnFv.c_str(),ios::out);
 
@@ -154,7 +154,7 @@ void parameterIteration(){
 	    Mat featureVectors;
 
 	    char buffer[30];
-	    sprintf(buffer,"%02dframe%05d_%03d_%02d.png",1,0,innerMargin[iMIdx],blkSize[bSIdx]);
+	    sprintf(buffer,"%02dframe%05d_%03d_%02d",1,0,innerMargin[iMIdx],blkSize[bSIdx]);
 	    string fnFrame = string(buffer);
 	    fv.processFrame(fnFrame,frame,featureVectors,true);
 

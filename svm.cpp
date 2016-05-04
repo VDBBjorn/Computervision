@@ -7,12 +7,16 @@ using namespace cv;
 
 int main(int argc, char** argv){
 
-	vector<short> labels;
-	vector<vector<int> > featureVectors;
+    vector<short> trainingDatasets;
+    trainingDatasets.push_back(1);
+    my_svm svm(trainingDatasets);
 
-    my_svm svm(labels,featureVectors);
+    vector<short> extDatasets;
+    extDatasets.push_back(1);
+    Mat extLablesMat, extTrainingsMat;
+    io::readTrainingsdata(extDatasets,extLablesMat,extTrainingsMat);
 
-    double precision = svm.get_precision();
+    double precision = svm.get_precision(extLablesMat,extTrainingsMat);
     cout << "precision of SVM: " << precision << "%" <<  endl;
 
     //use for visual testing

@@ -16,6 +16,8 @@ namespace io {
 	/** Constants **/
 	const string dirOutput = "output/";
 	const string dirTrainingsdata = "Trainingsdata/";
+	const string labelsPostfix = "_labels.csv";
+	const string featVecsPostfix = "_featurevectors.csv";
 	const int KEY_ESCAPE = 537919515;
 	const int KEY_ENTER = 537919498;
 	const int KEY_B = 537919498;
@@ -110,17 +112,19 @@ namespace io {
 		return (stat (name.c_str(), &buffer) == 0); 
 	}
 
-	void readTrainingsdata(vector<short>& labels, vector<vector<int> >& featureVectors){
-		for(int s=1;s<=1;s++) {
-		    char folder[36];
-		    sprintf(folder, "%02d",s);
+	void readTrainingsdata(vector<short>& datasets, Mat& labelsMat, Mat& trainingsMat){
+		vector<short> labels;
+		vector<vector<int> > featureVectors;
+
+		for(int s=0;s<datasets.size();s++) {
 			for(int f=0; f<=200; f+=5) {
-			    char number[36];
-			    sprintf(number, "%05d", f);
-			    string fnLbl = dirTrainingsdata+string(folder)+"frame"+string(number)+"_labels.csv";
-			    string fnFv = dirTrainingsdata+string(folder)+"frame"+string(number)+"_featurevectors.csv";
+			    char buffer[36];
+			    sprintf(buffer, "%02dframe%05d",datasets[s],f);
+			    string frameName = string(buffer);
+			    string fnLbl = dirTrainingsdata+frameName+labelsPostfix;
+			    string fnFv = dirTrainingsdata+frameName+featVecsPostfix;
 			    if(file_exists(fnLbl) && file_exists(fnFv)) {
-					cout<<"Reading trainingsdata of frame "<<string(folder)+"frame"+string(number)<<endl;
+					cout<<"Reading trainingsdata of frame "<<frameName<<endl;
 				 	ifstream ifsLbl(fnLbl.c_str());
 				 	ifstream ifsFv(fnFv.c_str());
 
@@ -140,6 +144,17 @@ namespace io {
 						featureVectors.push_back(fvValues);
 					}
 				}
+			}
+		}
+
+		labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
+	 	for(int i=0; i<labels.size();i++) {
+			labelsMat.at<int>(i,0) = labels[i];
+		}
+		trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
+		for(int i = 0; i<featureVectors.size(); i++) {
+			for(int j=0; j<featureVectors[i].size(); j++) {
+				trainingsMat.at<float>(i,j) = featureVectors[i][j];
 			}
 		}
 	}
