@@ -17,33 +17,33 @@ using namespace cv::ml;
 class my_svm {	
 private:
 	Ptr<SVM> svm;
-	Mat labelsMat;
-	Mat trainingsMat;
+	// Mat labelsMat;
+	// Mat trainingsMat;
 	Mat confusion;
 	double precision;
 
 public:
-	my_svm(vector<short>& datasets) {
-		io::readTrainingsdata(datasets,labelsMat,trainingsMat);
+	my_svm(Mat& labelsMat, Mat& trainingsMat, bool trainAuto=false) {
 		svm = SVM::create();
 	    svm->setType(SVM::C_SVC);
 	    svm->setKernel(SVM::RBF);
 	    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
 	    Ptr<TrainData> trainData_ptr = TrainData::create(trainingsMat, ROW_SAMPLE , labelsMat);
-	    /* Automatic training *
-		cout << "training the SVM... (this could take a while...)" << endl;
-	    svm->trainAuto(trainData_ptr);
-	    cout << "SVM trained" << endl;
-	    /* */
-	    /* Hardcoded params */
-	    svm->setC(0.1);
-	    svm->setCoef0(0);
-	    svm->setDegree(0);
-	    svm->setGamma(0.00015);
-	    svm->setNu(0);
-	    svm->setP(0);
-	    svm->train(trainData_ptr);
-	    /* */
+		cout << "training the SVM... "<<(trainAuto? "(automatically, this could take a while...)" : "") << endl;
+	    if(trainAuto){
+		    /* Automatic training */
+		    svm->trainAuto(trainData_ptr);
+		}else{
+		    /* Hardcoded params */
+		    svm->setC(0.1);
+		    svm->setCoef0(0);
+		    svm->setDegree(0);
+		    svm->setGamma(0.00015);
+		    svm->setNu(0);
+		    svm->setP(0);
+		    svm->train(trainData_ptr);
+		}
+		cout << "SVM trained" << endl;
 	    printParams(cout);
 		confusion = Mat::zeros(2,2, CV_32S);
 		precision = 0.0;

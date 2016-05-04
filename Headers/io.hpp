@@ -2,6 +2,7 @@
 #define IO_
 
 #include <string>
+#include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -144,6 +145,46 @@ namespace io {
 						featureVectors.push_back(fvValues);
 					}
 				}
+			}
+		}
+
+		labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
+	 	for(int i=0; i<labels.size();i++) {
+			labelsMat.at<int>(i,0) = labels[i];
+		}
+		trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
+		for(int i = 0; i<featureVectors.size(); i++) {
+			for(int j=0; j<featureVectors[i].size(); j++) {
+				trainingsMat.at<float>(i,j) = featureVectors[i][j];
+			}
+		}
+	}
+
+	void readTrainingsdataOutput(string frameName, Mat& labelsMat, Mat& trainingsMat){
+		vector<short> labels;
+		vector<vector<int> > featureVectors;
+
+	    string fnLbl = dirOutput+frameName+labelsPostfix;
+	    string fnFv = dirOutput+frameName+featVecsPostfix;
+	    if(file_exists(fnLbl) && file_exists(fnFv)) {
+			cout<<"Reading trainingsdata from output of frame "<<frameName<<endl;
+		 	ifstream ifsLbl(fnLbl.c_str());
+		 	ifstream ifsFv(fnFv.c_str());
+
+			string lineLbl,lineFv;
+			while( getline(ifsLbl,lineLbl) && getline(ifsFv,lineFv) ){
+				string strLbl = lineLbl.substr(lineLbl.find_first_of(',')+1);
+				labels.push_back(atoi(strLbl.c_str()));
+
+				size_t pos = lineFv.find_first_of('"')+1;
+				string strFv = lineFv.substr(pos);
+				stringstream ssFv(strFv);
+				vector<int> fvValues;
+				string strValue;
+				while(getline(ssFv,strValue,';')) {
+					fvValues.push_back(atoi(strValue.c_str()));
+				}
+				featureVectors.push_back(fvValues);
 			}
 		}
 

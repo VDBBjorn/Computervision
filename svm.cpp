@@ -9,7 +9,10 @@ int main(int argc, char** argv){
 
     vector<short> trainingDatasets;
     trainingDatasets.push_back(1);
-    my_svm svm(trainingDatasets);
+    Mat initLabels,initTraining;
+
+	io::readTrainingsdata(trainingDatasets,initLabels,initTraining);
+    my_svm svm(initLabels,initTraining);
 
     vector<short> extDatasets;
     extDatasets.push_back(1);

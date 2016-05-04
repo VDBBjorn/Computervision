@@ -1,7 +1,8 @@
 #include <string>
 #include <stdio.h>
-#include "Headers/lbpfeaturevector.hpp"
 #include "Headers/io.hpp"
+#include "Headers/lbpfeaturevector.hpp"
+#include "Headers/svm.hpp"
 
 using namespace std;
 using namespace cv;
@@ -113,14 +114,12 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 		io::showImage(windowName,img,false);
 		input=waitKey(50);
 	}
-	// cout<<"isRoad labeling"<<endl; io::printVector(cout,isRoad); cout<<endl;
 }
 
 void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad){
 	vector<short> labels(isRoad.size());
 	for(int i=0;i<isRoad.size();i++)
 		labels[i] = (isRoad[i]? 1 : -1);
-	// cout<<"isRoad saving "<<frameName<<endl; io::printVector(cout,isRoad); cout<<endl;
 
 	io::checkDir(io::dirOutput);
 
@@ -153,20 +152,21 @@ void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featur
 
 void parameterIterationTraining(){
     int outerMargin(16),lbpRadius(1),histBins(128);
-    int innerMargin[] = {64};
-    int blkSize[] = {8,16,32};
-    int dataset[] = {1,2};
+    int innerMargins[] = {64};
+    int blkSizes[] = {8,16,32};
+    int datasets[] = {1,2,3,4};
 
-    for(int dSIdx=0;dSIdx<sizeof(dataset)/sizeof(int);dSIdx++){
-	    Mat frame = imread(datasetFolders[dataset[dSIdx]-1]+"frame00000.png");
+    /* Iterate different parameters for each frame, process the frame and save output to file. */
+    for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
+	    Mat frame = imread(datasetFolders[datasets[dSIdx]-1]+"frame00000.png");
 
-	    for(int iMIdx=0;iMIdx<sizeof(innerMargin)/sizeof(int);iMIdx++){
-	    for(int bSIdx=0;bSIdx<sizeof(blkSize)/sizeof(int);bSIdx++){
-		    LbpFeatureVector fv(outerMargin,innerMargin[iMIdx],blkSize[bSIdx],lbpRadius,histBins);
+	    for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
+	    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
+		    LbpFeatureVector fv(outerMargin,innerMargins[iMIdx],blkSizes[bSIdx],lbpRadius,histBins);
 		    Mat featureVectors;
 
 		    char buffer[30];
-		    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset[dSIdx],0,innerMargin[iMIdx],blkSize[bSIdx]);
+		    sprintf(buffer,"%02dframe%05d_%03d_%02d",datasets[dSIdx],0,innerMargins[iMIdx],blkSizes[bSIdx]);
 		    string frameName = string(buffer);
 		    fv.processFrame(frameName,frame,featureVectors,true);
 
@@ -182,6 +182,45 @@ void parameterIterationTraining(){
 		    destroyAllWindows();
 		}
 		}
+	}
+
+	/* Iterate framesets per combination of parameters.
+	* Train SVM with one part of the frames, test SVM with the other part.
+	* Calculate confusion matrix and F-scores, save results to file.
+	*/
+
+	// Iterate all pair combinations of datasets
+	vector<pair<int,int> > dataset_pairs;
+	int nDatasets = sizeof(datasets)/sizeof(int);
+	for(int i=0; i<nDatasets-1; i++){
+		for(int j=i;j<nDatasets;j++){
+			dataset_pairs.push_back(pair<int,int>(datasets[i],datasets[j]));
+			dataset_pairs.push_back(pair<int,int>(datasets[j],datasets[i]));
+		}
+	}
+
+    for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
+    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
+    for(int dSPIdx=0;dSPIdx<dataset_pairs.size();dSPIdx++){
+    	// Read frameset train and test data
+    	Mat initLabels, initTrainingsdata, testLabels, testTrainingsdata;
+    	string initFrameName, testFrameName;
+    	char buffer[30];
+	    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset_pairs[dSPIdx].first,0,innerMargins[iMIdx],blkSizes[bSIdx]);
+	    initFrameName = string(buffer);
+	    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset_pairs[dSPIdx].second,0,innerMargins[iMIdx],blkSizes[bSIdx]);
+	    testFrameName = string(buffer);
+
+	    io::readTrainingsdataOutput(initFrameName,initLabels,initTrainingsdata);
+	    io::readTrainingsdataOutput(testFrameName,testLabels,testTrainingsdata);
+
+    	// Init SVM with automatic training
+	    my_svm svm(initLabels,initTrainingsdata);
+
+	    // Use SVM on different test data than trained with, print and save F-scores.
+	    cout<<svm.get_precision(testLabels,testTrainingsdata)<<"%"<<endl;
+    }
+    }
 	}
 }
 
@@ -204,10 +243,8 @@ void fullTraining(bool relabel=false){
 			fileToFrameName(fnFrame,frameName);
 
 			vector<bool> isRoad;
-			if(relabel)
-				guiLabeling(fv,frames[i],isRoad);
-			else
-				generateLabels(frameName,isRoad,featureVectors.rows);
+			generateLabels(frameName,isRoad,featureVectors.rows);
+			if(relabel)	guiLabeling(fv,frames[i],isRoad);
 
 			saveFrameOutput(frameName,frames[i],featureVectors,isRoad);
 		}
