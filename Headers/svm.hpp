@@ -49,11 +49,16 @@ public:
 		precision = 0.0;
 	}
 
+	Ptr<SVM> get_svm();
 	double get_precision(Mat&, Mat&);
 	void test(int, int, int, int);
 	void printParams(ostream&);
 
 };
+
+Ptr<SVM> my_svm::get_svm() {
+	return svm;
+}
 
 /**
  * Returns precision of the SVM on the given dataset after training

@@ -62,12 +62,26 @@ namespace io {
 	}
 
 	template <typename T>
-	void printVector(ostream& os, const vector<T>& v){    int i=0;
+	void printVector(ostream& os, const vector<T>& v){    
+		int i=0;
 	    while(i<v.size()-1){
 	        os<<v[i]<<";";
 	        i++;
 	    }
 	    os<<v[i];
+	}
+
+	void convertMatToString(Mat & m, string & out) {
+		out += "\"";
+		for(int i=0; i<m.rows;i++) {
+			for(int j=0; j<m.cols;j++) {
+				out += m.at<int>(i,j);
+				if(i != m.rows-1) {
+					out += ",";
+				}
+			}
+		}
+		out += "\"";
 	}
 
 	void checkDir(string dir){
