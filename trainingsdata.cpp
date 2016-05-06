@@ -8,6 +8,7 @@ using namespace std;
 using namespace cv;
 
 const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/", "Dataset/03/", "Dataset/04/" };
+const int FRAME_MAX_IDX = 160;
 
 void generateLabels(string frameName, vector<bool>& isRoad, int totalBlocks){
 	string fnLabels(io::dirOutput+frameName+io::labelsPostfix);
@@ -51,7 +52,9 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 	blkSize = fv.getBlkSize();
 
 	/* Draw initial block labeling */
-	for(int blkIdx=0; blkIdx<isRoad.size() && fv.validateBlkCoordinates(blkX,blkY,imWidth,imHeight); blkIdx++,fv.incrementBlkCoordinates(blkX,blkY,imWidth)){
+	for(int blkIdx=0; 
+			blkIdx<isRoad.size() && fv.validateBlkCoordinates(blkX,blkY,imWidth,imHeight);
+			blkIdx++,fv.incrementBlkCoordinates(blkX,blkY,imWidth)){
 		int red=0,green=0;
 		isRoad[blkIdx]? green=255 : red=255;
 		rectangle(img
@@ -155,32 +158,42 @@ void parameterIterationTraining(){
     int innerMargins[] = {64};
     int blkSizes[] = {8,16,32};
     int datasets[] = {1,2,3,4};
+    int frameInterval = 10;
+    int frameStopIdx = 50;// FRAME_MAX_IDX;
 
     /* Iterate different parameters for each frame, process the frame and save output to file. */
     for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
-	    Mat frame = imread(datasetFolders[datasets[dSIdx]-1]+"frame00000.png");
 
-	    for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
-	    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
-		    LbpFeatureVector fv(outerMargin,innerMargins[iMIdx],blkSizes[bSIdx],lbpRadius,histBins);
-		    Mat featureVectors;
+    	for(int fIdx=0;fIdx<frameStopIdx;fIdx+=frameInterval){
+    		char buffer[30];
+    		string fnFrame = datasetFolders[datasets[dSIdx]-1]+"frame%05d.png";
+    		sprintf(buffer,fnFrame.c_str(),fIdx);
+    		fnFrame = string(buffer);
 
-		    char buffer[30];
-		    sprintf(buffer,"%02dframe%05d_%03d_%02d",datasets[dSIdx],0,innerMargins[iMIdx],blkSizes[bSIdx]);
-		    string frameName = string(buffer);
-		    fv.processFrame(frameName,frame,featureVectors,true);
+    		if(!io::file_exists(fnFrame)) continue;
+		    Mat frame = imread(fnFrame);
 
-		    vector<bool> isRoad;
-		    generateLabels(frameName,isRoad,featureVectors.rows);
+		    for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
+			    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
+				    LbpFeatureVector fv(outerMargin,innerMargins[iMIdx],blkSizes[bSIdx],lbpRadius,histBins);
+				    Mat featureVectors;
 
-		    Mat frameWithBlocks;
-		    frame.copyTo(frameWithBlocks);
-		    guiLabeling(fv,frameWithBlocks,isRoad);
+				    sprintf(buffer,"%02dframe%05d_%03d_%02d",datasets[dSIdx],fIdx,innerMargins[iMIdx],blkSizes[bSIdx]);
+				    string frameName = string(buffer);
+				    fv.processFrame(frameName,frame,featureVectors,true);
 
-		    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
+				    vector<bool> isRoad;
+				    generateLabels(frameName,isRoad,featureVectors.rows);
 
-		    destroyAllWindows();
-		}
+				    Mat frameWithBlocks;
+				    frame.copyTo(frameWithBlocks);
+				    guiLabeling(fv,frameWithBlocks,isRoad);
+
+				    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
+
+				    destroyAllWindows();
+				}
+			}
 		}
 	}
 
@@ -193,29 +206,33 @@ void parameterIterationTraining(){
 	vector<pair<int,int> > dataset_pairs;
 	int nDatasets = sizeof(datasets)/sizeof(int);
 	for(int i=0; i<nDatasets-1; i++){
-		for(int j=i;j<nDatasets;j++){
+		for(int j=i+1;j<nDatasets;j++){
 			dataset_pairs.push_back(pair<int,int>(datasets[i],datasets[j]));
 			dataset_pairs.push_back(pair<int,int>(datasets[j],datasets[i]));
 		}
 	}
+	// for(int i=0; i<nDatasets; i++){
+	// 	dataset_pairs.push_back(pair<int,int>(datasets[i],datasets[i]));
+	// }
 
     for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
     for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
     for(int dSPIdx=0;dSPIdx<dataset_pairs.size();dSPIdx++){
-    	// Read frameset train and test data
+    	// Read train and test data of frameset
     	Mat initLabels, initTrainingsdata, testLabels, testTrainingsdata;
-    	string initFrameName, testFrameName;
-    	char buffer[30];
-	    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset_pairs[dSPIdx].first,0,innerMargins[iMIdx],blkSizes[bSIdx]);
-	    initFrameName = string(buffer);
-	    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset_pairs[dSPIdx].second,0,innerMargins[iMIdx],blkSizes[bSIdx]);
-	    testFrameName = string(buffer);
+    	for(int fIdx=0;fIdx<frameStopIdx;fIdx+=frameInterval){
+	    	string initFrameName, testFrameName;
+	    	char buffer[30];
+		    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset_pairs[dSPIdx].first,fIdx,innerMargins[iMIdx],blkSizes[bSIdx]);
+		    initFrameName = string(buffer);
+		    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset_pairs[dSPIdx].second,fIdx,innerMargins[iMIdx],blkSizes[bSIdx]);
+		    testFrameName = string(buffer);
 
-	    io::readTrainingsdataOutput(initFrameName,initLabels,initTrainingsdata);
-	    io::readTrainingsdataOutput(testFrameName,testLabels,testTrainingsdata);
-
+		    io::readTrainingsdataOutput(initFrameName,initLabels,initTrainingsdata);
+		    io::readTrainingsdataOutput(testFrameName,testLabels,testTrainingsdata);
+		}
     	// Init SVM with automatic training
-	    my_svm svm(initLabels,initTrainingsdata);
+	    my_svm svm(initLabels,initTrainingsdata,true);
 
 	    // Use SVM on different test data than trained with, print and save F-scores.
 	    cout<<svm.get_precision(testLabels,testTrainingsdata)<<"%"<<endl;

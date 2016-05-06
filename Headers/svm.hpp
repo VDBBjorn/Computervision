@@ -32,7 +32,7 @@ public:
 		cout << "training the SVM... "<<(trainAuto? "(automatically, this could take a while...)" : "") << endl;
 	    if(trainAuto){
 		    /* Automatic training */
-		    svm->trainAuto(trainData_ptr);
+		    svm->trainAuto(trainData_ptr,10,SVM::getDefaultGrid(SVM::C),SVM::getDefaultGrid(SVM::GAMMA),ParamGrid(),ParamGrid(),ParamGrid(),ParamGrid(),true);
 		}else{
 		    /* Hardcoded params */
 		    svm->setC(0.1);

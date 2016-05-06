@@ -188,12 +188,16 @@ namespace io {
 			}
 		}
 
-		labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
+		size_t oldRowSize = labelsMat.rows;
+		if(oldRowSize==0){
+			labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
+			trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
+		}else{
+			labelsMat.resize(oldRowSize+labels.size(),0);
+			trainingsMat.resize(oldRowSize+labels.size(),0);
+		}
 	 	for(int i=0; i<labels.size();i++) {
 			labelsMat.at<int>(i,0) = labels[i];
-		}
-		trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
-		for(int i = 0; i<featureVectors.size(); i++) {
 			for(int j=0; j<featureVectors[i].size(); j++) {
 				trainingsMat.at<float>(i,j) = featureVectors[i][j];
 			}
