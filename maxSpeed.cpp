@@ -2,15 +2,22 @@
 #include <string>
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include "opencv2/imgcodecs.hpp"
+#include <opencv2/ml.hpp>
 #include <vector>
 #include <sstream>
 #include <fstream>
 #include "LineDetection/LineDetection.cpp"
 #include "Headers/lbpfeaturevector.hpp"
 #include "Headers/io.hpp"
+#include <dirent.h>
+#include <iomanip>
 
 using namespace std;
 using namespace cv;
+using namespace cv::ml;
 
 int onderaan = 5;
 
@@ -28,7 +35,8 @@ vector<Mat> read_images(String folder, String regex) {
     return matrices;
 }
 
-void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<double> speeds) {
+void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds) {
+    int crash = 0;
     RNG rng(12345);
     int thresh = 255;
     for(int i = 0; i<masks.size(); i++) {
@@ -44,6 +52,59 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         
         //lijndetectie op wegdetectie
         Canny( roads[i], canny_output, thresh, thresh*2, 3 );
+
+        for(int j = 0; j < 10; j++){
+            //rode outliers uithalen
+            for(int z=39; z<roadRegions[i].size()-39; z++) {
+                if(roadRegions[i][z] == -1 && z%39 != 0 && z%39 != 38){
+                    int aantalRodeBuren = 0;
+                    //boven
+                    if(roadRegions[i][z-39-1] != 1)
+                        aantalRodeBuren++;
+                    if(roadRegions[i][z-39] != 1)
+                        aantalRodeBuren++;
+                    if(roadRegions[i][z-39+1] != 1)
+                        aantalRodeBuren++;
+                    //L&R
+                    if(roadRegions[i][z-1] != 1)
+                        aantalRodeBuren++;
+                    if(roadRegions[i][z+1] != 1)
+                        aantalRodeBuren++;
+                    //onder
+                    if(roadRegions[i][z+39-1] != 1)
+                        aantalRodeBuren++;
+                    if(roadRegions[i][z+39] != 1)
+                        aantalRodeBuren++;
+                    if(roadRegions[i][z+39+1] != 1)
+                        aantalRodeBuren++;
+                    if(aantalRodeBuren < 4){
+                        roadRegions[i][z] = 1;
+                        //cout << "PUNT " << i%39 << "," << i/39 << " groen gemaakt."<< endl;
+                    }
+                }
+            }
+            
+        }
+
+        imshow( "Max Speed 2", canny_output );
+
+        //road detection toevoegen
+        for(int j=0; j<roadRegions[i].size()-39; j++) {
+            int blkSize = 32;
+            int blkX = (j%39)*blkSize;
+            int blkY = (j/39)*blkSize;
+            if(roadRegions[i][j]!=1){
+                rectangle(canny_output
+                    ,Point(blkX,blkY)
+                    ,Point(blkX+blkSize,blkY+blkSize)
+                    ,Scalar(255,255,255)
+                    );
+            }
+        }
+
+        //roads[i].copyTo( dstt, canny_output);
+        imshow( "test", canny_output );
+        //waitKey(0);
         
         //Randen van de weg vinden
         findContours( canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0,0) );
@@ -98,7 +159,6 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         for(int j = 0; j < intersections.size(); j++){
             vec = masks[i].at<cv::Vec3b>(intersections[j].y,intersections[j].x);
             max = vec[0];
-            cout << j << ": " << intersections[j].y << "," << intersections[j].x << " -> " << max << ";" <<laagsteSnelheid << endl;
             if(laagsteSnelheid > max){
                 laagsteSnelheid = max;
                 laagsteSnelheidIndex = j;
@@ -115,16 +175,25 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         stringstream ss;
         ss << "Max speed (zelf): " << laagsteSnelheid << " km/u, gtdistances: " << speeds[i] << " km/u";
         if(laagsteSnelheid <= speeds[i])
-            putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,255,0 ), 1);
-        else
-            putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,0,255 ), 1);
+            putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,255,0 ), 3);
+        else{
+            putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,0,255 ), 3);
+            crash++;
+        }
         
-        
+        //print result
+        //cout << "FRAME " << i << ": " << laagsteSnelheid << " (" << speeds[i] << ") -> " << laagsteSnelheid-speeds[i] << endl;
+
+        stringstream ss2;
+        ss2 << setfill('0') << std::setw(5) << i << " " << laagsteSnelheid;
+        cout << ss2.str() << endl;
+
         /// Show in a window
         namedWindow( "Max Speed", CV_WINDOW_AUTOSIZE );
         imshow( "Max Speed", dst );
         waitKey(0);
     }
+    cout << "CRASHES: " << crash << endl;
 }
 
 vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames){
@@ -145,6 +214,61 @@ vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames){
         //destroyAllWindows();
     }
     return lineContours;
+}
+
+vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
+    Ptr<SVM> svm = SVM::create();
+    svm->setType(SVM::C_SVC);
+    //svm->setDegree(2);
+    // svm->setGamma(3);
+    //svm->setNu(0.4);
+    svm->setKernel(SVM::RBF);
+    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
+    
+    vector<short> labels;
+    vector<vector<int> > featureVectors;
+    
+    io::readTrainingsdata(labels,featureVectors);
+    
+    // Set up training data and labels
+    Mat labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
+    for(int i=0; i<labels.size();i++) {
+        labelsMat.at<int>(i,0) = labels[i];
+    }
+    
+    Mat trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
+    for(int i = 0; i<featureVectors.size(); i++) {
+        for(int j=0; j<featureVectors[i].size(); j++) {
+            trainingsMat.at<float>(i,j) = featureVectors[i][j];
+        }
+    }
+    
+    // Train the SVM
+    //svm->train(trainingsMat, ROW_SAMPLE, labelsMat);
+    Ptr<TrainData> trainData_ptr = TrainData::create(trainingsMat, ROW_SAMPLE , labelsMat);
+    svm->trainAuto(trainData_ptr);
+    cout << "SVM trained" << endl;
+    
+    // Show decision regions by the SVM
+    vector<vector<int> > roadRegions;
+    for(int i = 0; i < frames.size(); i++){
+        vector<int> vec;
+
+        LbpFeatureVector fv;
+        Mat features;
+        stringstream ss;
+        ss << datasetFolder << "/frame" << setfill('0') << std::setw(5) << i << ".png";
+        //cout << ss.str() << endl;
+        fv.processFrame(ss.str(), frames[i], features);
+    
+        for(int j=0; j<features.rows; j++) {
+            Mat_<float> row = Mat(features, Rect(0,j,features.cols,1));
+            int response = svm->predict(row);
+            vec.push_back(response);
+        }
+        roadRegions.push_back(vec);
+    }
+    return roadRegions;
 }
 
 int main(int argc, char** argv){
@@ -174,7 +298,16 @@ int main(int argc, char** argv){
     vector<Mat> frames = read_images(argv[1],"frame%05d.png");
     
     vector<Mat> roads = detectLines(masks,frames);
-    showMaxSpeed(masks,roads,frames, speeds);
+    vector<vector<int> > roadRegions = roadDetection(frames,argv[1]);
+
+    /*for(int i = 0; i < roadRegions.size(); i++){
+        cout << "FRAME " << i << endl;
+        for(int j = 0; j < roadRegions[i].size(); j++){
+            cout << roadRegions[i][j];
+        }
+    }*/
+
+    showMaxSpeed(masks,roads,frames,roadRegions,speeds);
     
     //waitKey(0);
     destroyAllWindows();
