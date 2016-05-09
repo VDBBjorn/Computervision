@@ -12,7 +12,7 @@ using namespace cv;
 class LineDetection {
 
 	public:
-    Mat getLinesFromImage(Mat & image,int initialHoughVote, int & houghVote,int initialHoughVote2, int & houghVote2, bool drawLinesOnImage, bool showSteps) {
+    Mat getLinesFromImage(Mat & image,int initialHoughVote, int & houghVote,int initialHoughVote2, int & houghVote2, bool drawLinesOnImage, bool showSteps, bool & isReliable) {
 
 			// Filter hough detected lines by angle
 			int minAngle = 20;
@@ -175,13 +175,14 @@ class LineDetection {
 			imgROI.copyTo(result2);
             vector<RoadLine> resultLines(2);
 			if(lines.size() < 2) {
+				isReliable = false;
 				cout << "Bocht";
 				ld.setLineLengthAndGap(140,30);
 				ld.setMinVote(3);
 				ld.setShift(image.cols/4);
 				ld.drawDetectedLines(result2, Scalar(255));
 			} else {
-
+				isReliable = true;
 			   // Draw the limes
 				it= lines.begin();
 				Mat hough2(imgROI.size(),CV_8U,Scalar(0));
