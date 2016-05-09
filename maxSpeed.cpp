@@ -14,6 +14,7 @@
 #include "Headers/io.hpp"
 #include <dirent.h>
 #include <iomanip>
+#include "Headers/svm.hpp"
 
 using namespace std;
 using namespace cv;
@@ -35,7 +36,7 @@ vector<Mat> read_images(String folder, String regex) {
     return matrices;
 }
 
-void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds) {
+void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds, vector<bool> & lijndetectieBetrouwbaar) {
     int crash = 0;
     RNG rng(12345);
     int thresh = 255;
@@ -45,7 +46,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         //kolom en rijen toevoegen aan wegdetectie
         hconcat(roads[i], col, roads[i]);
         vconcat(rows,roads[i],roads[i]);
-        
+        cout << lijndetectieBetrouwbaar[i] << endl;
         Mat canny_output;
         vector<vector<Point> > contours;
         vector<Vec4i> hierarchy;
@@ -171,6 +172,12 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         else{
             laagsteSnelheid = 90.0;
         }
+
+        double minVal, maxVal;
+        minMaxLoc(masks[i], &minVal, &maxVal);
+        if(laagsteSnelheid > maxVal){
+            laagsteSnelheid = maxVal;
+        }
         
         stringstream ss;
         ss << "Max speed (zelf): " << laagsteSnelheid << " km/u, gtdistances: " << speeds[i] << " km/u";
@@ -196,7 +203,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
     cout << "CRASHES: " << crash << endl;
 }
 
-vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames){
+vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames, vector<bool> & lijndetectieBetrouwbaar){
     LineDetection ld;
     int initialHoughVote = 150;
     int initialHoughVote2 = 150;
@@ -206,8 +213,10 @@ vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames){
     for(int i=0; i < frames.size(); i++) {
         bool drawLines = true; // draw detected lines on source image
         bool debugLinedetection = false; // wait after each frame and show all intermediate results
-        Mat lineContour = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection);
+        bool betrouwbaar = false;
+        Mat lineContour = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection, betrouwbaar);
         lineContours.push_back(lineContour);
+        lijndetectieBetrouwbaar.push_back(betrouwbaar);
         //namedWindow("LineContours");
         //imshow("LineContours",lineContour);
         //waitKey(0);
@@ -217,37 +226,12 @@ vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames){
 }
 
 vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
-    Ptr<SVM> svm = SVM::create();
-    svm->setType(SVM::C_SVC);
-    //svm->setDegree(2);
-    // svm->setGamma(3);
-    //svm->setNu(0.4);
-    svm->setKernel(SVM::RBF);
-    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
-    
-    vector<short> labels;
-    vector<vector<int> > featureVectors;
-    
-    io::readTrainingsdata(labels,featureVectors);
-    
-    // Set up training data and labels
-    Mat labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
-    for(int i=0; i<labels.size();i++) {
-        labelsMat.at<int>(i,0) = labels[i];
-    }
-    
-    Mat trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
-    for(int i = 0; i<featureVectors.size(); i++) {
-        for(int j=0; j<featureVectors[i].size(); j++) {
-            trainingsMat.at<float>(i,j) = featureVectors[i][j];
-        }
-    }
-    
-    // Train the SVM
-    //svm->train(trainingsMat, ROW_SAMPLE, labelsMat);
-    Ptr<TrainData> trainData_ptr = TrainData::create(trainingsMat, ROW_SAMPLE , labelsMat);
-    svm->trainAuto(trainData_ptr);
-    cout << "SVM trained" << endl;
+    vector<short> trainingDatasets;
+    trainingDatasets.push_back(1);
+    Mat initLabels,initTraining;
+
+    io::readTrainingsdata(trainingDatasets,initLabels,initTraining);
+    my_svm svm(initLabels,initTraining);
     
     // Show decision regions by the SVM
     vector<vector<int> > roadRegions;
@@ -263,7 +247,7 @@ vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
     
         for(int j=0; j<features.rows; j++) {
             Mat_<float> row = Mat(features, Rect(0,j,features.cols,1));
-            int response = svm->predict(row);
+            int response = svm.get_svm()->predict(row);
             vec.push_back(response);
         }
         roadRegions.push_back(vec);
@@ -296,8 +280,8 @@ int main(int argc, char** argv){
     
     vector<Mat> masks = read_images(argv[1],"mask%05d.png");
     vector<Mat> frames = read_images(argv[1],"frame%05d.png");
-    
-    vector<Mat> roads = detectLines(masks,frames);
+    vector<bool> lijndetectieBetrouwbaar;
+    vector<Mat> roads = detectLines(masks,frames,lijndetectieBetrouwbaar);
     vector<vector<int> > roadRegions = roadDetection(frames,argv[1]);
 
     /*for(int i = 0; i < roadRegions.size(); i++){
@@ -307,7 +291,7 @@ int main(int argc, char** argv){
         }
     }*/
 
-    showMaxSpeed(masks,roads,frames,roadRegions,speeds);
+    showMaxSpeed(masks,roads,frames,roadRegions,speeds,lijndetectieBetrouwbaar);
     
     //waitKey(0);
     destroyAllWindows();
