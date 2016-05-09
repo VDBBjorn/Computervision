@@ -1,6 +1,7 @@
 #include <string>
 #include <stdio.h>
-#include <time.h>
+// #include <time.h>
+#include <set>
 #include "Headers/io.hpp"
 #include "Headers/lbpfeaturevector.hpp"
 #include "Headers/svm.hpp"
@@ -155,10 +156,10 @@ void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featur
 }
 
 void output_to_csv_header(ofstream & csv) {
-	csv << "C;classWeights;coef0;degree;gamma;nu;p;innerMargins;blkSizes;dataset_pairs;precision" << endl;
+	csv << "C;classWeights;coef0;degree;gamma;nu;p;innerMargins;blkSizes;trainingsSet;TP;FP;FN;TN;precision" << endl;
 }
 
-void output_to_csv(ofstream & csv, int innerMargins, int blkSizes, int dataset_pairs, my_svm & svm, Mat & testLabels, Mat & testTrainingsdata) {
+void output_to_csv(ofstream & csv, int innerMargins, int blkSizes, int trainingsSet, my_svm & svm, Mat & testLabels, Mat & testTrainingsdata) {
 	double c = (svm.get_svm())->getC();
 	Mat classWeights = svm.get_svm()->getClassWeights();
 	string classWeightsString;
@@ -168,47 +169,60 @@ void output_to_csv(ofstream & csv, int innerMargins, int blkSizes, int dataset_p
 	double gamma = svm.get_svm()->getGamma();
 	double nu = svm.get_svm()->getNu();
 	double p = svm.get_svm()->getP();
-	csv<<c<<";"<<classWeightsString<<";"<<coef0<<";"<<degree<<";"<<gamma<<";"<<nu<<";"<<p<<";"<<innerMargins<<";"<<blkSizes<<";"<<dataset_pairs<<";"<<svm.get_precision(testLabels,testTrainingsdata)<<endl;
+	svm.calculateScores(testLabels,testTrainingsdata);
+	Mat* confusion = svm.get_confusion_matrix();
+	int TP = confusion->at<int>(0,0);
+	int FP = confusion->at<int>(0,1);
+	int FN = confusion->at<int>(1,0);
+	int TN = confusion->at<int>(1,1);
+	csv<<c<<";"<<classWeightsString<<";"<<coef0<<";"<<degree<<";"<<gamma<<";"<<nu<<";"<<p<<";"<<innerMargins<<";"<<blkSizes<<";"<<trainingsSet<<";"<<TP<<";"<<FP<<";"<<FN<<";"<<TN<<";"<<svm.get_precision()<<endl;
 }
 
-void parameterIterationTraining(){
+void parameterIterationTraining(bool relabel=true){
+	relabel = false;
+
     int outerMargin(16),lbpRadius(1),histBins(128);
     int innerMargins[] = {64};
-    int blkSizes[] = {8,16,32};
-    int datasets[] = {1,2,3,4};
+    int blkSizes[] = {16,32}; //{8,16,32};
+    int datasets[] = {4};//,2,3,4};
+    bool datasetDoubles = true;
     int frameInterval = 10;
-    int frameStopIdx = 50;// FRAME_MAX_IDX;
+    // int frameStopIdx = FRAME_MAX_IDX;
+    int frameStopIdx = 50;
+	bool trainAuto = false; // Whether or not to use automatic training for SVM
 
     /* Iterate different parameters for each frame, process the frame and save output to file. */
-    for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
-    	for(int fIdx=0;fIdx<frameStopIdx;fIdx+=frameInterval){
-    		char buffer[30];
-    		string fnFrame = datasetFolders[datasets[dSIdx]-1]+"frame%05d.png";
-    		sprintf(buffer,fnFrame.c_str(),fIdx);
-    		fnFrame = string(buffer);
+    if(relabel){
+	    for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
+	    	for(int fIdx=0;fIdx<frameStopIdx;fIdx+=frameInterval){
+	    		char buffer[30];
+	    		string fnFrame = datasetFolders[datasets[dSIdx]-1]+"frame%05d.png";
+	    		sprintf(buffer,fnFrame.c_str(),fIdx);
+	    		fnFrame = string(buffer);
 
-    		if(!io::file_exists(fnFrame)) continue;
-		    Mat frame = imread(fnFrame);
+	    		if(!io::file_exists(fnFrame)) continue;
+			    Mat frame = imread(fnFrame);
 
-		    for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
-			    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
-				    LbpFeatureVector fv(outerMargin,innerMargins[iMIdx],blkSizes[bSIdx],lbpRadius,histBins);
-				    Mat featureVectors;
+			    for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
+				    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
+					    LbpFeatureVector fv(outerMargin,innerMargins[iMIdx],blkSizes[bSIdx],lbpRadius,histBins);
+					    Mat featureVectors;
 
-				    sprintf(buffer,"%02dframe%05d_%03d_%02d",datasets[dSIdx],fIdx,innerMargins[iMIdx],blkSizes[bSIdx]);
-				    string frameName = string(buffer);
-				    fv.processFrame(frameName,frame,featureVectors,true);
+					    sprintf(buffer,"%02dframe%05d_%03d_%02d",datasets[dSIdx],fIdx,innerMargins[iMIdx],blkSizes[bSIdx]);
+					    string frameName = string(buffer);
+					    fv.processFrame(frameName,frame,featureVectors,true);
 
-				    vector<bool> isRoad;
-				    generateLabels(frameName,isRoad,featureVectors.rows);
+					    vector<bool> isRoad;
+					    generateLabels(frameName,isRoad,featureVectors.rows);
 
-				    Mat frameWithBlocks;
-				    frame.copyTo(frameWithBlocks);
-				    guiLabeling(fv,frameWithBlocks,isRoad);
+					    Mat frameWithBlocks;
+					    frame.copyTo(frameWithBlocks);
+					    guiLabeling(fv,frameWithBlocks,isRoad);
 
-				    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
+					    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
 
-				    destroyAllWindows();
+					    destroyAllWindows();
+					}
 				}
 			}
 		}
@@ -218,44 +232,55 @@ void parameterIterationTraining(){
 	* Train SVM with one part of the frames, test SVM with the other part.
 	* Calculate confusion matrix and F-scores, save results to file.
 	*/
-
-	// Iterate all pair combinations of datasets
-	vector<pair<int,int> > dataset_pairs;
+	bool isTrainingSet;
+	vector<set<int> > trainingsSets;
 	int nDatasets = sizeof(datasets)/sizeof(int);
+	string frameName;
+	char buffer[30];
+
+	io::checkDir(io::dirOutputLogging);
+	ofstream csv;
+	string fnFrameOutput = io::dirOutputLogging+"output_"+io::currentDateTime()+".csv";
+	csv.open(fnFrameOutput.c_str(),ios::out);
+	output_to_csv_header(csv);
+
 	for(int i=0; i<nDatasets-1; i++){
 		for(int j=i+1;j<nDatasets;j++){
-			dataset_pairs.push_back(pair<int,int>(datasets[i],datasets[j]));
-			dataset_pairs.push_back(pair<int,int>(datasets[j],datasets[i]));
+			set<int> tS;
+			tS.insert(datasets[i]);
+			tS.insert(datasets[j]);
+			trainingsSets.push_back(tS);
 		}
 	}
-	// for(int i=0; i<nDatasets; i++){
-	// 	dataset_pairs.push_back(pair<int,int>(datasets[i],datasets[i]));
-	// }
+	if(trainingsSets.empty() && nDatasets > 0){ // Single dataset
+		set<int> tS;
+		tS.insert(datasets[0]);
+		tS.insert(datasets[0]);
+		trainingsSets.push_back(tS);
+	}
 
-	ofstream csv;
-	csv.open("output.csv",ios::out);
-	output_to_csv_header(csv);
     for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
 	    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
-		    for(int dSPIdx=0;dSPIdx<dataset_pairs.size();dSPIdx++){
+		    // for(int dSPIdx=0;dSPIdx<dataset_pairs.size();dSPIdx++){
+		    for(int tSIdx=0;tSIdx<trainingsSets.size();tSIdx++){
 		    	// Read frameset train and test data
 		    	Mat initLabels, initTrainingsdata, testLabels, testTrainingsdata;
 	    		for(int fIdx=0;fIdx<frameStopIdx;fIdx+=frameInterval){
-			    	string initFrameName, testFrameName;
-			    	char buffer[30];
-				    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset_pairs[dSPIdx].first,fIdx,innerMargins[iMIdx],blkSizes[bSIdx]);
-				    initFrameName = string(buffer);
-				    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset_pairs[dSPIdx].second,fIdx,innerMargins[iMIdx],blkSizes[bSIdx]);
-				    testFrameName = string(buffer);
-
-				    io::readTrainingsdataOutput(initFrameName,initLabels,initTrainingsdata);
-				    io::readTrainingsdataOutput(testFrameName,testLabels,testTrainingsdata);
+					for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
+						sprintf(buffer,"%02dframe%05d_%03d_%02d",datasets[dSIdx],fIdx,innerMargins[iMIdx],blkSizes[bSIdx]);
+						frameName = string(buffer);
+						isTrainingSet = trainingsSets[tSIdx].find(datasets[dSIdx])!=trainingsSets[tSIdx].end();
+						if(isTrainingSet)
+						    io::readTrainingsdataOutput(frameName,initLabels,initTrainingsdata);
+						if(!isTrainingSet || datasetDoubles)
+						    io::readTrainingsdataOutput(frameName,testLabels,testTrainingsdata);
+					}
 				}
-		    	// Init SVM with automatic training
-			    my_svm svm(initLabels,initTrainingsdata);
+		    	// Init SVM and train
+			    my_svm svm(initLabels,initTrainingsdata,trainAuto);
 
 			    // Use SVM on different test data than trained with, save confusion matrix and F-scores.
-			    output_to_csv(csv, iMIdx, bSIdx, dSPIdx, svm, testLabels, testTrainingsdata);
+			    output_to_csv(csv, iMIdx, bSIdx, tSIdx, svm, testLabels, testTrainingsdata);
 		    }
 	    }
 	}

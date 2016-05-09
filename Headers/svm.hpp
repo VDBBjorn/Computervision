@@ -38,19 +38,22 @@ public:
 		    svm->setC(0.1);
 		    svm->setCoef0(0);
 		    svm->setDegree(0);
-		    svm->setGamma(0.00015);
+		    svm->setGamma(0.00225);
 		    svm->setNu(0);
 		    svm->setP(0);
 		    svm->train(trainData_ptr);
 		}
 		cout << "SVM trained" << endl;
-	    printParams(cout);
 		confusion = Mat::zeros(2,2, CV_32S);
 		precision = 0.0;
+
+	    printParams(cout);
 	}
 
 	Ptr<SVM> get_svm();
-	double get_precision(Mat&, Mat&);
+	void calculateScores(Mat&, Mat&);
+	double get_precision();
+	Mat* get_confusion_matrix();
 	void test(int, int, int, int);
 	void printParams(ostream&);
 
@@ -63,7 +66,15 @@ Ptr<SVM> my_svm::get_svm() {
 /**
  * Returns precision of the SVM on the given dataset after training
 **/
-double my_svm::get_precision(Mat& extLabels, Mat& extTrainingsMat) {
+double my_svm::get_precision(){
+	return precision;
+}
+
+Mat* my_svm::get_confusion_matrix(){
+	return &confusion;
+}
+
+void my_svm::calculateScores(Mat& extLabels, Mat& extTrainingsMat) {
 	if(precision == 0) {
 		for(int i=0; i<extTrainingsMat.rows;i++) {
 		    Mat value = extTrainingsMat.row(i);
@@ -81,9 +92,8 @@ double my_svm::get_precision(Mat& extLabels, Mat& extTrainingsMat) {
 		}
 		precision = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows)*100;
 	}
-	cout<<"Confusion matrix: "<<endl;
-	cout<<confusion<<endl;
-	return precision;
+    cout<<"Confusion matrix:"<<confusion<<endl;
+    cout<<"Precision: "<<precision<<"%"<<endl;
 }
 
 /**
@@ -107,15 +117,15 @@ void my_svm::test(int min = 1, int max = 4, int skip = 5, int number = 5) {
             Mat features;
             fv.processFrame(fnFrame, image, features);
 
-            // cout << features << endl;
+            int blkSize = fv.getBlkSize(), imWidth = image.cols, imHeight = image.rows;
+			int numBlksWidth = (imWidth-2*fv.getOuterMargin()-blkSize)/(fv.getInnerMargin()+blkSize) + 1;
 
             for(int i=0; i<features.rows; i++) {
                 Mat_<float> row = Mat(features, Rect(0,i,features.cols,1));
                 int response = svm->predict(row);
                 int red=0,green=0;
-                int blkSize = 32;
-                int blkX = (i%39)*blkSize;
-                int blkY = (i/39)*blkSize;
+                int blkX = (i%numBlksWidth)*blkSize;
+                int blkY = (i/numBlksWidth)*blkSize;
                 (response==1? green=255 : red=255);
                 rectangle(image
                     ,Point(blkX,blkY)

@@ -33,6 +33,7 @@ main
 svm
 trainingsdata
 maxSpeed
+output/Logging/*
 
 ## Core latex/pdflatex auxiliary files:
 *.aux

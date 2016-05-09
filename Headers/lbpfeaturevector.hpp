@@ -28,7 +28,7 @@ private:
 public:
 	//LbpFeatureVector(): outerMargin(1),innerMargin(0),blkSize(32),lbpRadius(1),histBins(128){}
 
-	LbpFeatureVector(int _outerMargin=1,int _innerMargin=0,int _blkSize=32,int _lbpRadius=1,int _histBins=128):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){}
+	LbpFeatureVector(int _outerMargin=1,int _innerMargin=0,int _blkSize=16,int _lbpRadius=1,int _histBins=128):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){}
 
 	int getOuterMargin(){ return outerMargin;}
 	int getInnerMargin(){ return innerMargin;}

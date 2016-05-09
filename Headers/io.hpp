@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <ctime>
+// #include <chrono>
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
 
@@ -16,6 +18,7 @@ namespace io {
 
 	/** Constants **/
 	const string dirOutput = "output/";
+	const string dirOutputLogging = dirOutput+"Logging/";
 	const string dirTrainingsdata = "Trainingsdata/";
 	const string labelsPostfix = "_labels.csv";
 	const string featVecsPostfix = "_featurevectors.csv";
@@ -211,9 +214,9 @@ namespace io {
 			trainingsMat.resize(oldRowSize+labels.size(),0);
 		}
 	 	for(int i=0; i<labels.size();i++) {
-			labelsMat.at<int>(i,0) = labels[i];
+			labelsMat.at<int>(i+oldRowSize,0) = labels[i];
 			for(int j=0; j<featureVectors[i].size(); j++) {
-				trainingsMat.at<float>(i,j) = featureVectors[i][j];
+				trainingsMat.at<float>(i+oldRowSize,j) = featureVectors[i][j];
 			}
 		}
 	}
@@ -232,6 +235,19 @@ namespace io {
 				( atoi(strLbl.c_str()) > 0 )
 			);
 	 	}
+	}
+
+	const string currentDateTime() {
+	    time_t     now = time(0);
+	    struct tm  tstruct;
+	    char       buf[80];
+	    tstruct = *localtime(&now);
+	    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+	    // for more information about date/time format
+	    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+	    return buf;
+	    // return chrono::system_clock::now();
 	}
 }
 
