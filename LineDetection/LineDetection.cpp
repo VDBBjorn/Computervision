@@ -12,7 +12,7 @@ using namespace cv;
 class LineDetection {
 
 	public:
-    Mat getLinesFromImage(Mat & image,int initialHoughVote, int & houghVote,int initialHoughVote2, int & houghVote2, bool drawLinesOnImage, bool showSteps) {
+    Mat getLinesFromImage(Mat & image,int initialHoughVote, int & houghVote,int initialHoughVote2, int & houghVote2, bool drawLinesOnImage, bool showSteps, bool & isReliable) {
 
 			// Filter hough detected lines by angle
 			int minAngle = 20;
@@ -172,6 +172,7 @@ class LineDetection {
 				//houghVote2 -= 5;
 			//}
 
+			isReliable = false;
 			imgROI.copyTo(result2);
             vector<RoadLine> resultLines(2);
 			if(lines.size() < 2) {
@@ -181,7 +182,6 @@ class LineDetection {
 				ld.setShift(image.cols/4);
 				ld.drawDetectedLines(result2, Scalar(255));
 			} else {
-
 			   // Draw the limes
 				it= lines.begin();
 				Mat hough2(imgROI.size(),CV_8U,Scalar(0));
@@ -229,6 +229,19 @@ class LineDetection {
 
                 line( image, resultLines[0].pt1, resultLines[0].pt2, Scalar(0), 8);
                 line( image, resultLines[1].pt1, resultLines[1].pt2, Scalar(0), 8);
+
+                if(resultLines[0].pt1.x != 0 && resultLines[0].pt1.y != 0 
+                	&& resultLines[0].pt2.x != 0 && resultLines[0].pt2.y != 0
+                	&& resultLines[1].pt1.x != 0 && resultLines[1].pt1.y != 0
+                	&& resultLines[1].pt2.x != 0 && resultLines[1].pt2.y != 0){
+		                isReliable = true;
+		            	resultLines[0].pt1.y -= image.cols/4;
+		            	resultLines[0].pt2.y -= image.cols/4;
+		            	resultLines[1].pt1.y -= image.cols/4;
+		            	resultLines[1].pt2.y -= image.cols/4;
+		                line( houghPinv, resultLines[0].pt1, resultLines[0].pt2, Scalar(0), 8);
+		                line( houghPinv, resultLines[1].pt1, resultLines[1].pt2, Scalar(0), 8);
+            	}
 			}
 
 			
