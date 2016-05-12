@@ -179,17 +179,17 @@ void output_to_csv(ofstream & csv, int innerMargins, int blkSizes, int trainings
 }
 
 void parameterIterationTraining(bool relabel=true){
-	relabel = false;
+	// relabel = false;
 
     int outerMargin(16),lbpRadius(1),histBins(128);
     int innerMargins[] = {64};
-    int blkSizes[] = {16,32}; //{8,16,32};
-    int datasets[] = {4};//,2,3,4};
-    bool datasetDoubles = true;
+    int blkSizes[] = {8,16,32}; //{8,16,32};
+    int datasets[] = {1,2,3,4}; //{1,2,3,4};
+    bool datasetDoubles = false;
     int frameInterval = 10;
     // int frameStopIdx = FRAME_MAX_IDX;
     int frameStopIdx = 50;
-	bool trainAuto = false; // Whether or not to use automatic training for SVM
+	bool trainAuto = true; // Whether or not to use automatic training for SVM
 
     /* Iterate different parameters for each frame, process the frame and save output to file. */
     if(relabel){
@@ -217,7 +217,7 @@ void parameterIterationTraining(bool relabel=true){
 
 					    Mat frameWithBlocks;
 					    frame.copyTo(frameWithBlocks);
-					    guiLabeling(fv,frameWithBlocks,isRoad);
+					    // guiLabeling(fv,frameWithBlocks,isRoad);
 
 					    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
 
@@ -240,7 +240,7 @@ void parameterIterationTraining(bool relabel=true){
 
 	io::checkDir(io::dirOutputLogging);
 	ofstream csv;
-	string fnFrameOutput = io::dirOutputLogging+"output_"+io::currentDateTime()+".csv";
+	string fnFrameOutput = io::dirOutputLogging+"output_"+io::currentDateTime()+"_LBP_only.csv";
 	csv.open(fnFrameOutput.c_str(),ios::out);
 	output_to_csv_header(csv);
 

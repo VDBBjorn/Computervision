@@ -205,7 +205,7 @@ public:
 		int totalBlocks = numBlksWidth*numBlksHeight;
 		int isRoadThreshold = (totalBlocks-1)*0.6;
 
-		featVectors = Mat(totalBlocks,histBins*img.channels(),CV_32SC1);	
+		featVectors = Mat(totalBlocks,histBins*(img.channels()*2),CV_32SC1);	
 
 		/* Process blocks in frame */
 		int blkIdx = -1;
@@ -216,9 +216,13 @@ public:
 		    Mat lbpBlk;
 		    LBP(img,lbpBlk,lbpRadius,blkX,blkY,blkSize);
 
+		    /* Create block in seperate image */
+		    Mat imgBlk(img,Rect(Point2f(blkX,blkY),Point2f(blkX+blkSize,blkY+blkSize)));
+
 		    /* Create histogram featurevector for LBP values of current block */
 		    vector<int> hist;
-		    featureVector(lbpBlk,hist);
+		    featureVector(imgBlk,hist); // Append color histogram for block
+		    featureVector(lbpBlk,hist); // Append LBP histogram
 		    for(int i=0; i<hist.size();i++) {
 		    	featVectors.at<int>(blkIdx,i) = hist[i];
 		    }
