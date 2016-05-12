@@ -263,7 +263,7 @@ int main(int argc, char** argv){
     std::stringstream ss;
     ss << argv[1] << "/gtdistances.txt";
     cout << ss.str() << endl;
-    ifstream infile(ss.str());
+    ifstream infile(ss.str().c_str());
     
     while (std::getline(infile, line))
     {

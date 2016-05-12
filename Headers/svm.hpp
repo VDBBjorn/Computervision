@@ -38,7 +38,7 @@ public:
 		    svm->setC(0.1);
 		    svm->setCoef0(0);
 		    svm->setDegree(0);
-		    svm->setGamma(0.00225);
+		    svm->setGamma(0.00015);
 		    svm->setNu(0);
 		    svm->setP(0);
 		    svm->train(trainData_ptr);
