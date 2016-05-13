@@ -12,8 +12,8 @@ using namespace cv;
 const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/", "Dataset/03/", "Dataset/04/" };
 const int FRAME_MAX_IDX = 160;
 
-void generateLabels(string frameName, vector<bool>& isRoad, int totalBlocks){
-	string fnLabels(io::dirOutput+frameName+io::labelsPostfix);
+void generateLabels(string frameName, vector<bool>& isRoad, int totalBlocks, bool includeMarks=false){
+	string fnLabels(io::dirOutput+frameName+(includeMarks? io::marks : "")+io::labelsPostfix);
 	if(io::file_exists(fnLabels)){
 		io::readFrameLabels(fnLabels,isRoad);
 	}else{
@@ -190,6 +190,7 @@ void parameterIterationTraining(bool relabel=true){
     // int frameStopIdx = FRAME_MAX_IDX;
     int frameStopIdx = 50;
 	bool trainAuto = true; // Whether or not to use automatic training for SVM
+	bool includeMarks = true;
 
     /* Iterate different parameters for each frame, process the frame and save output to file. */
     if(relabel){
@@ -213,11 +214,11 @@ void parameterIterationTraining(bool relabel=true){
 					    fv.processFrame(frameName,frame,featureVectors,true);
 
 					    vector<bool> isRoad;
-					    generateLabels(frameName,isRoad,featureVectors.rows);
+					    generateLabels(frameName,isRoad,featureVectors.rows,includeMarks);
 
 					    Mat frameWithBlocks;
 					    frame.copyTo(frameWithBlocks);
-					    // guiLabeling(fv,frameWithBlocks,isRoad);
+					    guiLabeling(fv,frameWithBlocks,isRoad);
 
 					    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
 
@@ -240,7 +241,7 @@ void parameterIterationTraining(bool relabel=true){
 
 	io::checkDir(io::dirOutputLogging);
 	ofstream csv;
-	string fnFrameOutput = io::dirOutputLogging+"output_"+io::currentDateTime()+"_LBP_only.csv";
+	string fnFrameOutput = io::dirOutputLogging+"output_"+(includeMarks?io::marks+"_":"")+io::currentDateTime()+".csv";
 	csv.open(fnFrameOutput.c_str(),ios::out);
 	output_to_csv_header(csv);
 
