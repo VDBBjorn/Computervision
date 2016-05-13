@@ -184,7 +184,7 @@ void parameterIterationTraining(bool relabel=true){
     int outerMargin(16),lbpRadius(1),histBins(128);
     int innerMargins[] = {64};
     int blkSizes[] = {8,16,32}; //{8,16,32};
-    int datasets[] = {1,2/*,3,4*/}; //{1,2,3,4};
+    int datasets[] = {1,2,3,4}; //{1,2,3,4};
     bool datasetDoubles = false;
     int frameInterval = 10;
     // int frameStopIdx = FRAME_MAX_IDX;
