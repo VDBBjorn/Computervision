@@ -177,8 +177,13 @@ public:
 	* If trainingsdata is ment to be generated, CSV-files containing labels and featurevectors will be created,
 	* along with a copy of the frame with the blocks drawn on top of it.
 	*/
-	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool isTrainingsdata=false){
+	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool isTrainingsdata=false, bool useColor=true, bool useLBP=true){
     	cout<<"Start processFrame "<<fnFrame<<endl;
+    	if(!useColor && !useLBP){
+    		cerr<<"You are using neither color or LBP for featurvectors, aka nothing!"<<endl;
+    		throw;
+    	}
+
     	/* Initial configuration */
 		blkX = outerMargin;
 		blkY = outerMargin;
@@ -212,17 +217,22 @@ public:
 		while( validateBlkCoordinates(blkX,blkY,imWidth,imHeight) ){
 		    blkIdx++;
 
-		    /* Calculate LBP values for current block */
-		    Mat lbpBlk;
-		    LBP(img,lbpBlk,lbpRadius,blkX,blkY,blkSize);
+		    /* Create histogram featurevector for LBP values and/or color values of current block */
+		    vector<int> hist;
 
 		    /* Create block in seperate image */
-		    Mat imgBlk(img,Rect(Point2f(blkX,blkY),Point2f(blkX+blkSize,blkY+blkSize)));
+		    if(useColor){
+			    Mat imgBlk(img,Rect(Point2f(blkX,blkY),Point2f(blkX+blkSize,blkY+blkSize)));
+			    featureVector(imgBlk,hist); // Append color histogram for block
+			}
 
-		    /* Create histogram featurevector for LBP values of current block */
-		    vector<int> hist;
-		    featureVector(imgBlk,hist); // Append color histogram for block
-		    featureVector(lbpBlk,hist); // Append LBP histogram
+		    /* Calculate LBP values for current block */
+		    if(useLBP){
+			    Mat lbpBlk;
+			    LBP(img,lbpBlk,lbpRadius,blkX,blkY,blkSize);
+		    	featureVector(lbpBlk,hist); // Append LBP histogram
+			}
+
 		    for(int i=0; i<hist.size();i++) {
 		    	featVectors.at<int>(blkIdx,i) = hist[i];
 		    }

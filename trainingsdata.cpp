@@ -9,7 +9,7 @@
 using namespace std;
 using namespace cv;
 
-const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/", "Dataset/03/", "Dataset/04/" };
+const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/", /*"Dataset/03/", "Dataset/04/"*/ };
 const int FRAME_MAX_IDX = 160;
 
 void generateLabels(string frameName, vector<bool>& isRoad, int totalBlocks, bool includeMarks=false){
@@ -175,7 +175,7 @@ void output_to_csv(ofstream & csv, int innerMargins, int blkSizes, int trainings
 	int FP = confusion->at<int>(0,1);
 	int FN = confusion->at<int>(1,0);
 	int TN = confusion->at<int>(1,1);
-	csv<<c<<";"<<classWeightsString<<";"<<coef0<<";"<<degree<<";"<<gamma<<";"<<nu<<";"<<p<<";"<<innerMargins<<";"<<blkSizes<<";"<<trainingsSet<<";"<<TP<<";"<<FP<<";"<<FN<<";"<<TN<<";"<<svm.get_precision()<<svm.get_accuracy()<<svm.get_recall()<<svm.get_true_negative()<<svm.get_F<<endl;
+	csv<<c<<";"<<classWeightsString<<";"<<coef0<<";"<<degree<<";"<<gamma<<";"<<nu<<";"<<p<<";"<<innerMargins<<";"<<blkSizes<<";"<<trainingsSet<<";"<<TP<<";"<<FP<<";"<<FN<<";"<<TN<<";"<<svm.get_precision()<<svm.get_accuracy()<<svm.get_recall()<<svm.get_true_negative()<<svm.get_F()<<endl;
 }
 
 void parameterIterationTraining(bool relabel=true){
@@ -184,7 +184,7 @@ void parameterIterationTraining(bool relabel=true){
     int outerMargin(16),lbpRadius(1),histBins(128);
     int innerMargins[] = {64};
     int blkSizes[] = {8,16,32}; //{8,16,32};
-    int datasets[] = {1,2,3,4}; //{1,2,3,4};
+    int datasets[] = {1,2/*,3,4*/}; //{1,2,3,4};
     bool datasetDoubles = false;
     int frameInterval = 10;
     // int frameStopIdx = FRAME_MAX_IDX;
