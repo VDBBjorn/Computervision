@@ -21,6 +21,10 @@ private:
 	// Mat trainingsMat;
 	Mat confusion;
 	double precision;
+	double recall;
+	double accuracy;
+	double true_negative;
+	double F;
 
 public:
 	my_svm(Mat& labelsMat, Mat& trainingsMat, bool trainAuto=false) {
@@ -46,6 +50,10 @@ public:
 		cout << "SVM trained" << endl;
 		confusion = Mat::zeros(2,2, CV_32S);
 		precision = 0.0;
+		recall = 0.0;
+		accuracy = 0.0;
+		true_negative = 0.0;
+		F = 0.0;
 
 	    printParams(cout);
 	}
@@ -53,6 +61,10 @@ public:
 	Ptr<SVM> get_svm();
 	void calculateScores(Mat&, Mat&);
 	double get_precision();
+	double get_recall();
+	double get_accuracy();
+	double get_true_negative();
+	double get_F();
 	Mat* get_confusion_matrix();
 	void test(int, int, int, int);
 	void printParams(ostream&);
@@ -70,30 +82,54 @@ double my_svm::get_precision(){
 	return precision;
 }
 
+double my_svm::get_recall(){
+	return recall;
+}
+
+double my_svm::get_accuracy(){
+	return accuracy;
+}
+
+double my_svm::get_true_negative(){
+	return true_negative;
+}
+
+double my_svm::get_F(){
+	return F;
+}
+
 Mat* my_svm::get_confusion_matrix(){
 	return &confusion;
 }
 
 void my_svm::calculateScores(Mat& extLabels, Mat& extTrainingsMat) {
-	if(precision == 0) {
+	if(precision == 0 || recall == 0 || accuracy == 0 || true_negative == 0) {
 		for(int i=0; i<extTrainingsMat.rows;i++) {
 		    Mat value = extTrainingsMat.row(i);
 		    int label = extLabels.at<int>(i,0);
 		    int predicted = svm->predict(value);
-		    if(label==1 && predicted == 1) {
+		    if(label==1 && predicted == 1) {	//TP
 		        confusion.at<int>(0,0)++;
 		    }
-		    else if (label==-1 && predicted==-1) {
+		    else if (label==-1 && predicted==-1) {	//TN
 		        confusion.at<int>(1,1)++;
 		    }
 		    else {
 		        confusion.at<int>(label==-1 ? 0,1 : 1,0)++;
 		    }
 		}
-		precision = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows)*100;
+		accuracy = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows)*100;
+		precision = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(0,1))*100);
+		recall = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(1,1)))*100;
+		true_negative = (double)(confusion.at<int>(1,0)/(confusion.at<int>(1,0)+confusion.at<int>(0,1))*100);	
+		F = 2*(precision*recall)/(precision+recall);
 	}
     cout<<"Confusion matrix:"<<confusion<<endl;
     cout<<"Precision: "<<precision<<"%"<<endl;
+    cout<<"recall: "<<recall<<"%"<<endl;
+    cout<<"accuracy: "<<accuracy<<"%"<<endl;
+    cout<<"true_negative: "<<true_negative<<"%"<<endl;    
+    cout<<"F: "<<F<<"%"<<endl;
 }
 
 /**
