@@ -156,7 +156,7 @@ void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featur
 }
 
 void output_to_csv_header(ofstream & csv) {
-	csv << "C;classWeights;coef0;degree;gamma;nu;p;innerMargins;blkSizes;trainingsSet;TP;FP;FN;TN;precision" << endl;
+	csv << "C;classWeights;coef0;degree;gamma;nu;p;innerMargins;blkSizes;trainingsSet;TP;FP;FN;TN;precision;accuracy;recall;true-negative;F" << endl;
 }
 
 void output_to_csv(ofstream & csv, int innerMargins, int blkSizes, int trainingsSet, my_svm & svm, Mat & testLabels, Mat & testTrainingsdata) {
@@ -175,7 +175,7 @@ void output_to_csv(ofstream & csv, int innerMargins, int blkSizes, int trainings
 	int FP = confusion->at<int>(0,1);
 	int FN = confusion->at<int>(1,0);
 	int TN = confusion->at<int>(1,1);
-	csv<<c<<";"<<classWeightsString<<";"<<coef0<<";"<<degree<<";"<<gamma<<";"<<nu<<";"<<p<<";"<<innerMargins<<";"<<blkSizes<<";"<<trainingsSet<<";"<<TP<<";"<<FP<<";"<<FN<<";"<<TN<<";"<<svm.get_precision()<<endl;
+	csv<<c<<";"<<classWeightsString<<";"<<coef0<<";"<<degree<<";"<<gamma<<";"<<nu<<";"<<p<<";"<<innerMargins<<";"<<blkSizes<<";"<<trainingsSet<<";"<<TP<<";"<<FP<<";"<<FN<<";"<<TN<<";"<<svm.get_precision()<<svm.get_accuracy()<<svm.get_recall()<<svm.get_true_negative()<<svm.get_F<<endl;
 }
 
 void parameterIterationTraining(bool relabel=true){
