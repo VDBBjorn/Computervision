@@ -9,7 +9,7 @@
 using namespace std;
 using namespace cv;
 
-const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/", /*"Dataset/03/", "Dataset/04/"*/ };
+const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/","Dataset/03/", "Dataset/04/" };
 const int FRAME_MAX_IDX = 160;
 
 void generateLabels(string frameName, vector<bool>& isRoad, int totalBlocks, bool includeMarks=false){
@@ -121,7 +121,7 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 	}
 }
 
-void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad){
+void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad, bool includeMarks=false){
 	vector<short> labels(isRoad.size());
 	for(int i=0;i<isRoad.size();i++)
 		labels[i] = (isRoad[i]? 1 : -1);
@@ -130,8 +130,8 @@ void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featur
 
 	/* Open new CSV-files for frame data in output directory */
 	ofstream fosLbl, fosFv;
-	string fnLbl = io::dirOutput+frameName+io::labelsPostfix;
-	string fnFv = io::dirOutput+frameName+io::featVecsPostfix;
+	string fnLbl = io::dirOutput+frameName+(includeMarks?io::marks:"")+io::labelsPostfix;
+	string fnFv = io::dirOutput+frameName+(includeMarks?io::marks:"")+io::featVecsPostfix;
 	fosLbl.open(fnLbl.c_str(),ios::out);
 	fosFv.open(fnFv.c_str(),ios::out);
 
@@ -220,7 +220,7 @@ void parameterIterationTraining(bool relabel=true){
 					    frame.copyTo(frameWithBlocks);
 					    guiLabeling(fv,frameWithBlocks,isRoad);
 
-					    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad);
+					    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad,includeMarks);
 
 					    destroyAllWindows();
 					}
