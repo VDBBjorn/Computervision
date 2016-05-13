@@ -21,6 +21,7 @@ namespace io {
 	const string dirOutputLogging = dirOutput+"Logging/";
 	const string dirTrainingsdata = "Trainingsdata/";
 	const string labelsPostfix = "_labels.csv";
+	const string marks = "_marks";
 	const string featVecsPostfix = "_featurevectors.csv";
 	const int KEY_ESCAPE = 537919515;
 	const int KEY_ENTER = 537919498;
