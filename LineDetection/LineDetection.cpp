@@ -73,7 +73,7 @@ public:
         std::vector<Vec2f>::const_iterator it = lines.begin();
         Mat hough(imgROI.size(), CV_8U, Scalar(0));
 
-        HoughLines(contours,lines,1,PI/180, houghVote);
+        //HoughLines(contours,lines,1,PI/180, houghVote);
 
         vector<RoadLine> resultLines(2);
 
