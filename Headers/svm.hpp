@@ -9,6 +9,7 @@
 #include "opencv2/highgui.hpp"
 #include <opencv2/ml.hpp>
 #include "io.hpp"
+#include "lbpfeaturevector.hpp"
 
 using namespace std;
 using namespace cv;
@@ -39,10 +40,10 @@ public:
 		    svm->trainAuto(trainData_ptr,10,SVM::getDefaultGrid(SVM::C),SVM::getDefaultGrid(SVM::GAMMA),ParamGrid(),ParamGrid(),ParamGrid(),ParamGrid(),true);
 		}else{
 		    /* Hardcoded params */
-		    svm->setC(0.1);
+		    svm->setC(io::C);
 		    svm->setCoef0(0);
 		    svm->setDegree(0);
-		    svm->setGamma(0.00015);
+		    svm->setGamma(io::gamma);
 		    svm->setNu(0);
 		    svm->setP(0);
 		    svm->train(trainData_ptr);
@@ -103,6 +104,7 @@ Mat* my_svm::get_confusion_matrix(){
 }
 
 void my_svm::calculateScores(Mat& extLabels, Mat& extTrainingsMat) {
+    cout<<"Start calculateScores"<<endl;
 	if(precision == 0 || recall == 0 || accuracy == 0 || true_negative == 0) {
 		for(int i=0; i<extTrainingsMat.rows;i++) {
 		    Mat value = extTrainingsMat.row(i);
@@ -121,14 +123,15 @@ void my_svm::calculateScores(Mat& extLabels, Mat& extTrainingsMat) {
 		accuracy = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows)*100;
 		precision = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(0,1))*100);
 		recall = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(1,1)))*100;
-		true_negative = (double)(confusion.at<int>(1,0)/(confusion.at<int>(1,0)+confusion.at<int>(0,1))*100);	
+		if(confusion.at<int>(1,0) == 0) true_negative = 0;
+		else true_negative = (double)(confusion.at<int>(1,0)/(confusion.at<int>(1,0)+confusion.at<int>(0,1))*100);	
 		F = 2*(precision*recall)/(precision+recall);
 	}
-    cout<<"Confusion matrix:"<<confusion<<endl;
+    cout<<"Confusion matrix: "<<endl<<confusion<<endl;
     cout<<"Precision: "<<precision<<"%"<<endl;
-    cout<<"recall: "<<recall<<"%"<<endl;
-    cout<<"accuracy: "<<accuracy<<"%"<<endl;
-    cout<<"true_negative: "<<true_negative<<"%"<<endl;    
+    cout<<"Recall: "<<recall<<"%"<<endl;
+    cout<<"Accuracy: "<<accuracy<<"%"<<endl;
+    cout<<"True Negative: "<<true_negative<<"%"<<endl;    
     cout<<"F: "<<F<<"%"<<endl;
 }
 

@@ -14,18 +14,19 @@ int main(int argc, char** argv){
 
     string frameName;
     char buffer[30];
-    int dataset(1),innerMargin(64),blkSize(16);
-    for(int f=0; f<=200; f+=10) {
-        sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset,f,innerMargin,blkSize);
-        frameName = string(buffer);
+    for(int dSIdx=0;dSIdx<sizeof(io::datasets)/sizeof(int);dSIdx++){
+    int dataset = io::datasets[dSIdx];
+    for(int fIdx=0;fIdx<io::frameStopIdx;fIdx+=io::frameInterval){
+        io::buildFrameName(buffer,frameName,dataset,fIdx,io::innerMargin,io::blkSize,io::includeMarks);
         io::readTrainingsdataOutput(frameName,initLabels,initTraining);
         io::readTrainingsdataOutput(frameName,testLabels,testTraining);
+    }
     }
 
     // io::readTrainingsdata(trainingDatasets,initLabels,initTraining);
     // io::readTrainingsdata(testDatasets,testLabels,testTraining);
 
-    my_svm svm(initLabels,initTraining,true);
+    my_svm svm(initLabels,initTraining,io::trainAuto);
     svm.calculateScores(testLabels,testTraining);
 
     //use for visual testing

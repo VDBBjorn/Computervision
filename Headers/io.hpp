@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <ctime>
-// #include <chrono>
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
 
@@ -24,8 +23,22 @@ namespace io {
 	const string marks = "_marks";
 	const string featVecsPostfix = "_featurevectors.csv";
 	const int KEY_ESCAPE = 537919515;
-	const int KEY_ENTER = 537919498;
-	const int KEY_B = 537919498;
+	
+	/** Maxspeed training and run parameters**/
+	const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/","Dataset/03/", "Dataset/04/" };
+    const int datasets[] = {1,2,3,4}; //{1,2,3,4};
+    const int frameInterval = 10;
+    const int frameStopIdx = 50;
+    const int innerMargin = 64;
+    const int blkSize = 32;
+    const bool includeMarks = false;
+    const bool trainAuto = false;
+    const bool useColor = true;
+    const bool useLBP = true;
+
+    /** SVM parameters for when not training automatically **/
+    const double C = 0.1;
+    const double gamma = 0.00015;
 
 	/** Shown image properties and helper values **/
 	int imX=50,imY=50
@@ -129,6 +142,11 @@ namespace io {
 	bool file_exists(const string& name) {
 		struct stat buffer;   
 		return (stat (name.c_str(), &buffer) == 0); 
+	}
+
+	void buildFrameName(char* buffer,string& frameName,int dataset,int frameIdx,int innerMargin,int blkSize,bool includeMarks){
+	    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset,frameIdx,innerMargin,blkSize);
+	    frameName = string(buffer) + (includeMarks?marks:"");
 	}
 
 	void readTrainingsdata(vector<short>& datasets, Mat& labelsMat, Mat& trainingsMat){

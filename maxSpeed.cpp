@@ -199,6 +199,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         /*namedWindow( "Max Speed", CV_WINDOW_AUTOSIZE );
         imshow( "Max Speed", dst );
         waitKey(0);*/
+        io::checkDir("outputframes");
         stringstream ssOut;
         ssOut << "outputframes/frame" << i << ".png";
         imwrite(ssOut.str(),dst);
@@ -229,16 +230,29 @@ vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames, vector<bool> 
 }
 
 vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
-    vector<short> trainingDatasets;
-    trainingDatasets.push_back(1);
-    Mat initLabels,initTraining;
+    Mat initLabels,initTrainingsdata;
 
-    io::readTrainingsdata(trainingDatasets,initLabels,initTraining);
-    my_svm svm(initLabels,initTraining,true);
+    // vector<short> trainingDatasets;
+    // trainingDatasets.push_back(1);
+    // io::readTrainingsdata(trainingDatasets,initLabels,initTraining);
+
+    char buffer[30];
+    string frameName;
+
+    for(int dSIdx=0;dSIdx<sizeof(io::datasets)/sizeof(int);dSIdx++){
+    int dataset = io::datasets[dSIdx];
+    for(int fIdx=0;fIdx<io::frameStopIdx;fIdx+=io::frameInterval){
+        io::buildFrameName(buffer,frameName,dataset,fIdx,io::innerMargin,io::blkSize,io::includeMarks);
+        io::readTrainingsdataOutput(frameName,initLabels,initTrainingsdata);
+    }
+    }
+
+    my_svm svm(initLabels,initTrainingsdata,io::trainAuto);
     
     // Show decision regions by the SVM
     vector<vector<int> > roadRegions;
-    for(int i = 0; i < frames.size(); i++){
+    // for(int i = 0; i < frames.size(); i++){
+    for(int i = 0; i < 10; i++){
         vector<int> vec;
 
         LbpFeatureVector fv;
