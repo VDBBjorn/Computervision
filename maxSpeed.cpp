@@ -57,8 +57,9 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         //ROAD DETECTION indien lijndetectie niet voldoende betrouwbaar is
         //if(true){
         if(!lijndetectieBetrouwbaar[i]){
+        //if(false){
+            //rode outliers uithalen
             for(int j = 0; j < 10; j++){
-                //rode outliers uithalen
                 for(int z=39; z<roadRegions[i].size()-39; z++) {
                     if(roadRegions[i][z] == -1 && z%39 != 0 && z%39 != 38){
                         int aantalRodeBuren = 0;
@@ -87,7 +88,6 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
                         }
                     }
                 }
-                
             }
 
             for(int j=0; j<roadRegions[i].size()-39; j++) {
@@ -176,6 +176,9 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
             laagsteSnelheid = maxVal;
         }
         
+        if(laagsteSnelheid!= 90)
+            laagsteSnelheid -=2;
+        
         stringstream ss;
         ss << "Max speed (zelf): " << laagsteSnelheid << " km/u, gtdistances: " << speeds[i] << " km/u";
         if(laagsteSnelheid <= speeds[i])
@@ -193,9 +196,12 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         cout << ss2.str() << endl;
 
         /// Show in a window
-        namedWindow( "Max Speed", CV_WINDOW_AUTOSIZE );
+        /*namedWindow( "Max Speed", CV_WINDOW_AUTOSIZE );
         imshow( "Max Speed", dst );
-        //waitKey(0);
+        waitKey(0);*/
+        stringstream ssOut;
+        ssOut << "outputframes/frame" << i << ".png";
+        imwrite(ssOut.str(),dst);
     }
     cout << "CRASHES: " << crash << endl;
 }
@@ -228,7 +234,7 @@ vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
     Mat initLabels,initTraining;
 
     io::readTrainingsdata(trainingDatasets,initLabels,initTraining);
-    my_svm svm(initLabels,initTraining);
+    my_svm svm(initLabels,initTraining,true);
     
     // Show decision regions by the SVM
     vector<vector<int> > roadRegions;
@@ -279,7 +285,9 @@ int main(int argc, char** argv){
     vector<Mat> frames = read_images(argv[1],"frame%05d.png");
     vector<bool> lijndetectieBetrouwbaar;
     vector<Mat> roads = detectLines(masks,frames,lijndetectieBetrouwbaar);
+    cout << "lines done"<< endl;
     vector<vector<int> > roadRegions = roadDetection(frames,argv[1]);
+    cout << "road done" << endl;
 
     /*for(int i = 0; i < roadRegions.size(); i++){
         cout << "FRAME " << i << endl;
@@ -287,6 +295,8 @@ int main(int argc, char** argv){
             cout << roadRegions[i][j];
         }
     }*/
+    
+    system("exec rm -r outputframes/*");
 
     showMaxSpeed(masks,roads,frames,roadRegions,speeds,lijndetectieBetrouwbaar);
     
