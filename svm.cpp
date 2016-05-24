@@ -30,7 +30,7 @@ int main(int argc, char** argv){
     svm.calculateScores(testLabels,testTraining);
 
     //use for visual testing
-    svm.test(1,4,5,5);
+    svm.test(1,4,10,5);
 
 	return 0;
 }

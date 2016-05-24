@@ -116,22 +116,25 @@ void my_svm::calculateScores(Mat& extLabels, Mat& extTrainingsMat) {
 		    else if (label==-1 && predicted==-1) {	//TN
 		        confusion.at<int>(1,1)++;
 		    }
-		    else {
-		        confusion.at<int>(label==-1 ? 0,1 : 1,0)++;
+		    else if (label==-1 && predicted==1) {	//FP
+		        confusion.at<int>(1,0)++;
+		    }
+		    else {	//FN ; label==1 && predicted==-1)
+		        confusion.at<int>(0,1)++;
 		    }
 		}
 		accuracy = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows)*100;
-		precision = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(0,1))*100);
-		recall = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(1,1)))*100;
-		if(confusion.at<int>(1,0) == 0) true_negative = 0;
-		else true_negative = (double)(confusion.at<int>(1,0)/(confusion.at<int>(1,0)+confusion.at<int>(0,1))*100);	
+		precision = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(1,0))*100);
+		recall = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(0,1)))*100;
+		if(confusion.at<int>(1,1) == 0) true_negative = 0;
+		else true_negative = ((double)confusion.at<int>(1,1)/(confusion.at<int>(1,1)+confusion.at<int>(1,0)))*100;	
 		F = 2*(precision*recall)/(precision+recall);
 	}
     cout<<"Confusion matrix: "<<endl<<confusion<<endl;
     cout<<"Precision: "<<precision<<"%"<<endl;
     cout<<"Recall: "<<recall<<"%"<<endl;
     cout<<"Accuracy: "<<accuracy<<"%"<<endl;
-    cout<<"True Negative: "<<true_negative<<"%"<<endl;    
+    cout<<"True Negative Rate: "<<true_negative<<"%"<<endl;    
     cout<<"F: "<<F<<"%"<<endl;
 }
 
@@ -146,7 +149,7 @@ void my_svm::test(int min = 1, int max = 4, int skip = 5, int number = 5) {
     for(int ds=min; ds<=max; ds++) {
         char dsnumber[36];
         sprintf(dsnumber, "%02d", ds);
-        for(int f=0; f<=(number*skip); f+=5) {
+        for(int f=5; f<=(5+number*skip); f+=skip) {
             char number[36];
             sprintf(number, "%05d", f);
             // Show decision regions by the SVM

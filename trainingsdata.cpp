@@ -156,8 +156,7 @@ void output_to_csv_header(ofstream & csv, bool useColor, bool useLBP, bool inclu
 	csv<< endl;
 	csv<<"FV w Color;FV w LBP;include road marks"<<endl;
 	csv<<(useColor?"Yes":"No")<<";"<<(useLBP?"Yes":"No")<<";"<<(includeMarks?"Yes":"No")<<";"<<endl;
-	// csv<<"C;classWeights;coef0;degree;gamma;nu;p;datasets trained on;TP;FP;FN;TN;precision;accuracy;recall;true-negative;F"<<endl;
-	csv<<"C;gamma;datasets trained on;TP;FP;FN;TN;precision;accuracy;recall;true-negative;F"<<endl;
+	csv<<"C;gamma;datasets trained on;TP;FN;FP;TN;precision;accuracy;recall;True negative rate;F"<<endl;
 }
 
 void output_to_csv(ofstream & csv, set<int>& trainingsSet, my_svm & svm, Mat & testLabels, Mat & testTrainingsdata) {
@@ -173,8 +172,8 @@ void output_to_csv(ofstream & csv, set<int>& trainingsSet, my_svm & svm, Mat & t
 	svm.calculateScores(testLabels,testTrainingsdata);
 	Mat* confusion = svm.get_confusion_matrix();
 	int TP = confusion->at<int>(0,0);
-	int FP = confusion->at<int>(0,1);
-	int FN = confusion->at<int>(1,0);
+	int FN = confusion->at<int>(0,1);
+	int FP = confusion->at<int>(1,0);
 	int TN = confusion->at<int>(1,1);
 	ostringstream strBldr;
 	strBldr<<"\"";
@@ -186,8 +185,7 @@ void output_to_csv(ofstream & csv, set<int>& trainingsSet, my_svm & svm, Mat & t
 	trainingsSetString = trainingsSetString.substr(0,trainingsSetString.size()-1);
 	trainingsSetString+="\"";
 	
-	// csv<<c<<";"<<classWeightsString<<";"<<coef0<<";"<<degree<<";"<<gamma<<";"<<nu<<";"<<p<<";"<<trainingsSet<<";"<<TP<<";"<<FP<<";"<<FN<<";"<<TN<<";"<<svm.get_precision()<<";"<<svm.get_accuracy()<<";"<<svm.get_recall()<<";"<<svm.get_true_negative()<<";"<<svm.get_F()<<endl;
-	csv<<c<<";"<<gamma<<";"<<trainingsSetString<<";"<<TP<<";"<<FP<<";"<<FN<<";"<<TN<<";"<<svm.get_precision()<<";"<<svm.get_accuracy()<<";"<<svm.get_recall()<<";"<<svm.get_true_negative()<<";"<<svm.get_F()<<endl;
+	csv<<c<<";"<<gamma<<";"<<trainingsSetString<<";"<<TP<<";"<<FN<<";"<<FP<<";"<<TN<<";"<<svm.get_precision()<<";"<<svm.get_accuracy()<<";"<<svm.get_recall()<<";"<<svm.get_true_negative()<<";"<<svm.get_F()<<endl;
 }
 
 void parameterIterationTraining(bool relabel=true){
