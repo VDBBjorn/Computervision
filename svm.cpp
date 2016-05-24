@@ -18,8 +18,8 @@ int main(int argc, char** argv){
     int dataset = io::datasets[dSIdx];
     for(int fIdx=0;fIdx<io::frameStopIdx;fIdx+=io::frameInterval){
         io::buildFrameName(buffer,frameName,dataset,fIdx,io::innerMargin,io::blkSize,io::includeMarks);
-        io::readTrainingsdataOutput(frameName,initLabels,initTraining);
-        io::readTrainingsdataOutput(frameName,testLabels,testTraining);
+        io::readTrainingsdataOutput(frameName,initLabels,initTraining,io::useLBP,io::useColor);
+        io::readTrainingsdataOutput(frameName,testLabels,testTraining,io::useLBP,io::useColor);
     }
     }
 

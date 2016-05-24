@@ -9,8 +9,8 @@
 using namespace std;
 using namespace cv;
 
-void generateLabels(string frameName, vector<bool>& isRoad, int totalBlocks, bool includeMarks=false){
-	string fnLabels(io::dirOutput+frameName+(includeMarks? io::marks : "")+io::labelsPostfix);
+void generateLabels(string frameName, vector<bool>& isRoad, int totalBlocks){
+	string fnLabels(io::dirOutput+frameName+io::labelsPostfix);
 	if(io::file_exists(fnLabels)){
 		io::readFrameLabels(fnLabels,isRoad);
 	}else{
@@ -118,7 +118,7 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 	}
 }
 
-void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad, bool includeMarks=false){
+void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad, bool useLBP, bool useColor){
 	vector<short> labels(isRoad.size());
 	for(int i=0;i<isRoad.size();i++)
 		labels[i] = (isRoad[i]? 1 : -1);
@@ -127,8 +127,8 @@ void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featur
 
 	/* Open new CSV-files for frame data in output directory */
 	ofstream fosLbl, fosFv;
-	string fnLbl = io::dirOutput+frameName+(includeMarks?io::marks:"")+io::labelsPostfix;
-	string fnFv = io::dirOutput+frameName+(includeMarks?io::marks:"")+io::featVecsPostfix;
+	string fnLbl = io::dirOutput+frameName+io::labelsPostfix;
+	string fnFv = io::dirOutput+frameName+(useLBP?io::lbpStr:"")+(useColor?io::colorStr:"")+io::featVecsPostfix;
 	fosLbl.open(fnLbl.c_str(),ios::out);
 	fosFv.open(fnFv.c_str(),ios::out);
 
@@ -156,10 +156,10 @@ void output_to_csv_header(ofstream & csv, bool useColor, bool useLBP, bool inclu
 	csv<< endl;
 	csv<<"FV w Color;FV w LBP;include road marks"<<endl;
 	csv<<(useColor?"Yes":"No")<<";"<<(useLBP?"Yes":"No")<<";"<<(includeMarks?"Yes":"No")<<";"<<endl;
-	csv<<"C;gamma;datasets trained on;TP;FN;FP;TN;precision;accuracy;recall;True negative rate;F"<<endl;
+	csv<<"C;gamma;blkSize;datasets trained on;TP;FN;FP;TN;precision;accuracy;recall;True negative rate;F"<<endl;
 }
 
-void output_to_csv(ofstream & csv, set<int>& trainingsSet, my_svm & svm, Mat & testLabels, Mat & testTrainingsdata) {
+void output_to_csv(ofstream & csv, set<int>& trainingsSet, my_svm & svm, int blkSize, Mat & testLabels, Mat & testTrainingsdata) {
 	double c = (svm.get_svm())->getC();
 	// Mat classWeights = svm.get_svm()->getClassWeights();
 	// string classWeightsString;
@@ -185,7 +185,7 @@ void output_to_csv(ofstream & csv, set<int>& trainingsSet, my_svm & svm, Mat & t
 	trainingsSetString = trainingsSetString.substr(0,trainingsSetString.size()-1);
 	trainingsSetString+="\"";
 	
-	csv<<c<<";"<<gamma<<";"<<trainingsSetString<<";"<<TP<<";"<<FN<<";"<<FP<<";"<<TN<<";"<<svm.get_precision()<<";"<<svm.get_accuracy()<<";"<<svm.get_recall()<<";"<<svm.get_true_negative()<<";"<<svm.get_F()<<endl;
+	csv<<c<<";"<<gamma<<";"<<blkSize<<";"<<trainingsSetString<<";"<<TP<<";"<<FN<<";"<<FP<<";"<<TN<<";"<<svm.get_precision()<<";"<<svm.get_accuracy()<<";"<<svm.get_recall()<<";"<<svm.get_true_negative()<<";"<<svm.get_F()<<endl;
 }
 
 void parameterIterationTraining(bool relabel=true){
@@ -200,15 +200,15 @@ void parameterIterationTraining(bool relabel=true){
     // int frameStopIdx = io::FRAME_MAX_IDX;
     int frameStopIdx = 50;
 	bool trainAuto = false; // Whether or not to use automatic training for SVM
-	bool useColor = true;
-	bool useLBP = true;
-	bool includeMarks = true;
+	bool includeMarksVals[] = {false,true};
+	bool useColorVals[] = {false,true,true};
+	bool useLBPVals[] = {true,false,true};
 
 	string frameName;
 	char buffer[30];
 
     /* Iterate different parameters for each frame, process the frame and save output to file. */
-    for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
+	for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
 	int dataset = datasets[dSIdx];
 	for(int fIdx=0;fIdx<frameStopIdx;fIdx+=frameInterval){
 
@@ -223,15 +223,19 @@ void parameterIterationTraining(bool relabel=true){
 		int innerMargin = innerMargins[iMIdx];
 	    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
 		int blkSize = blkSizes[bSIdx];
+		for(int incMIdx=0;incMIdx<sizeof(includeMarksVals)/sizeof(bool);incMIdx++){
+		bool includeMarks = includeMarksVals[incMIdx];
+		for(int fvTypeIdx=0;fvTypeIdx<sizeof(useLBPVals)/sizeof(bool);fvTypeIdx++){
+		bool useLBP = useLBPVals[fvTypeIdx], useColor = useColorVals[fvTypeIdx];
 
 		    LbpFeatureVector fv(outerMargin,innerMargin,blkSize,lbpRadius,histBins);
 		    Mat featureVectors;
 
-		    io::buildFrameName(buffer,frameName,dataset,fIdx,innerMargin,blkSize,false);
-		    fv.processFrame(frameName,frame,featureVectors,true);
+		    io::buildFrameName(buffer,frameName,dataset,fIdx,innerMargin,blkSize,includeMarks);
+		    fv.processFrame(frameName,frame,featureVectors,useLBP,useColor,true);
 
 		    vector<bool> isRoad;
-		    generateLabels(frameName,isRoad,featureVectors.rows,includeMarks);
+		    generateLabels(frameName,isRoad,featureVectors.rows);
 
 		    Mat frameWithBlocks;
 		    if(relabel){
@@ -239,9 +243,11 @@ void parameterIterationTraining(bool relabel=true){
 			    guiLabeling(fv,frameWithBlocks,isRoad);
 			}
 
-		    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad,includeMarks);
+		    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad,useLBP,useColor);
 
 		    destroyAllWindows();
+		}
+		}
 		}
 		}
 	}
@@ -275,63 +281,71 @@ void parameterIterationTraining(bool relabel=true){
 		trainingsSets.push_back(tS);
 	}
 
-	output_to_csv_header(csv,useColor,useLBP,includeMarks);
+	for(int incMIdx=0;incMIdx<sizeof(includeMarksVals)/sizeof(bool);incMIdx++){
+	bool includeMarks = includeMarksVals[incMIdx];
+	for(int fvTypeIdx=0;fvTypeIdx<sizeof(useLBPVals)/sizeof(bool);fvTypeIdx++){
+	bool useLBP = useLBPVals[fvTypeIdx], useColor = useColorVals[fvTypeIdx];
 
-    for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
-    int innerMargin = innerMargins[iMIdx];
-    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
-    int blkSize = blkSizes[bSIdx];
-    for(int tSIdx=0;tSIdx<trainingsSets.size();tSIdx++){
-    set<int>& trainingsSet = trainingsSets[tSIdx];
-    	// Read trainings and test data for trainings set
-    	Mat initLabels, initTrainingsdata, testLabels, testTrainingsdata;
-		for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
-		int dataset = datasets[dSIdx];
-		for(int fIdx=0;fIdx<frameStopIdx;fIdx+=frameInterval){
-			io::buildFrameName(buffer,frameName,dataset,fIdx,innerMargin,blkSize,includeMarks);
-			isTrainingSet = trainingsSet.find(dataset)!=trainingsSet.end();
-			if(isTrainingSet)
-			    io::readTrainingsdataOutput(frameName,initLabels,initTrainingsdata);
-			if(!isTrainingSet || datasetDoubles)
-			    io::readTrainingsdataOutput(frameName,testLabels,testTrainingsdata);
-		}
-		}
-    	// Init SVM and train
-	    my_svm svm(initLabels,initTrainingsdata,trainAuto);
+		output_to_csv_header(csv,useColor,useLBP,includeMarks);
 
-	    // Use SVM on different test data than trained with, save confusion matrix and F-scores.
-	    output_to_csv(csv, trainingsSet, svm, testLabels, testTrainingsdata);
-    }
-    }
+	    for(int iMIdx=0;iMIdx<sizeof(innerMargins)/sizeof(int);iMIdx++){
+	    int innerMargin = innerMargins[iMIdx];
+	    for(int bSIdx=0;bSIdx<sizeof(blkSizes)/sizeof(int);bSIdx++){
+	    int blkSize = blkSizes[bSIdx];
+	    for(int tSIdx=0;tSIdx<trainingsSets.size();tSIdx++){
+	    set<int>& trainingsSet = trainingsSets[tSIdx];
+
+	    	// Read trainings and test data for trainings set
+	    	Mat initLabels, initTrainingsdata, testLabels, testTrainingsdata;
+			for(int dSIdx=0;dSIdx<sizeof(datasets)/sizeof(int);dSIdx++){
+			int dataset = datasets[dSIdx];
+			for(int fIdx=0;fIdx<frameStopIdx;fIdx+=frameInterval){
+				io::buildFrameName(buffer,frameName,dataset,fIdx,innerMargin,blkSize,includeMarks);
+				isTrainingSet = trainingsSet.find(dataset)!=trainingsSet.end();
+				if(isTrainingSet)
+				    io::readTrainingsdataOutput(frameName,initLabels,initTrainingsdata,useLBP,useColor);
+				if(!isTrainingSet || datasetDoubles)
+				    io::readTrainingsdataOutput(frameName,testLabels,testTrainingsdata,useLBP,useColor);
+			}
+			}
+	    	// Init SVM and train
+		    my_svm svm(initLabels,initTrainingsdata,trainAuto);
+
+		    // Use SVM on different test data than trained with, save confusion matrix and F-scores.
+		    output_to_csv(csv, trainingsSet, svm, blkSize, testLabels, testTrainingsdata);
+	    }
+	    }
+		}
+	}
 	}
 	csv.close();
 }
 
 void fullTraining(bool relabel=false){
-    int outerMargin(16),innerMargin(64);
-    LbpFeatureVector fv(outerMargin,innerMargin);
+ //    int outerMargin(16),innerMargin(64);
+ //    LbpFeatureVector fv(outerMargin,innerMargin);
 
-	vector<Mat> frames;
-	string frameRegex = "frame%05d.png";
-	for(int s=0; s<sizeof(io::datasetFolders)/sizeof(string); s++) {
-		io::readImages(io::datasetFolders[s],frameRegex,frames);
-		for(int i=0;i<frames.size();i+=5){
-			char buffer[30];
-			sprintf(buffer,("%02d"+frameRegex).c_str(),s+1,i);
-			string fnFrame = string(buffer);
-			Mat featureVectors;
-			fv.processFrame(fnFrame,frames[i],featureVectors,true);
+	// vector<Mat> frames;
+	// string frameRegex = "frame%05d.png";
+	// for(int s=0; s<sizeof(io::datasetFolders)/sizeof(string); s++) {
+	// 	io::readImages(io::datasetFolders[s],frameRegex,frames);
+	// 	for(int i=0;i<frames.size();i+=5){
+	// 		char buffer[30];
+	// 		sprintf(buffer,("%02d"+frameRegex).c_str(),s+1,i);
+	// 		string fnFrame = string(buffer);
+	// 		Mat featureVectors;
+	// 		fv.processFrame(fnFrame,frames[i],featureVectors,true,true,true);
 
-			string frameName;
-			fileToFrameName(fnFrame,frameName);
+	// 		string frameName;
+	// 		fileToFrameName(fnFrame,frameName);
 
-			vector<bool> isRoad;
-			generateLabels(frameName,isRoad,featureVectors.rows);
-			if(relabel)	guiLabeling(fv,frames[i],isRoad);
+	// 		vector<bool> isRoad;
+	// 		generateLabels(frameName,isRoad,featureVectors.rows);
+	// 		if(relabel)	guiLabeling(fv,frames[i],isRoad);
 
-			saveFrameOutput(frameName,frames[i],featureVectors,isRoad);
-		}
-	}
+	// 		saveFrameOutput(frameName,frames[i],featureVectors,isRoad);
+	// 	}
+	// }
 }
 
 int main (int argc, char** argv){

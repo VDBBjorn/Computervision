@@ -177,8 +177,8 @@ public:
 	* If trainingsdata is ment to be generated, CSV-files containing labels and featurevectors will be created,
 	* along with a copy of the frame with the blocks drawn on top of it.
 	*/
-	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool isTrainingsdata=false, bool useColor=true, bool useLBP=true){
-    	cout<<"Start processFrame "<<fnFrame<<endl;
+	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool useColor=true, bool useLBP=true, bool isTrainingsdata=false){
+    	cout<<"Start processFrame "<<fnFrame+(useLBP?io::lbpStr:"")+(useColor?io::colorStr:"")<<endl;
     	if(!useColor && !useLBP){
     		cerr<<"You are using neither color or LBP for featurvectors, aka nothing!"<<endl;
     		throw;

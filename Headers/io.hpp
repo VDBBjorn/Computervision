@@ -20,7 +20,9 @@ namespace io {
 	const string dirOutputLogging = dirOutput+"Logging/";
 	const string dirTrainingsdata = "Trainingsdata/";
 	const string labelsPostfix = "_labels.csv";
-	const string marks = "_marks";
+	const string lbpStr = "_lbp";
+	const string colorStr = "_color";
+	const string marksStr = "_marks";
 	const string featVecsPostfix = "_featurevectors.csv";
 	const int KEY_ESCAPE = 537919515;
 	
@@ -33,8 +35,8 @@ namespace io {
     const int blkSize = 16; // 8,16,32
     const bool includeMarks = false;
     const bool trainAuto = false;
-    const bool useColor = true; // Make sure to use either color, LBP or both
-    const bool useLBP = true;
+    const bool useLBP = true; // Make sure to use either color, LBP or both
+    const bool useColor = true;
 
     /** SVM parameters for when not training automatically **/
     const double C = 0.1;
@@ -147,7 +149,7 @@ namespace io {
 
 	void buildFrameName(char* buffer,string& frameName,int dataset,int frameIdx,int innerMargin,int blkSize,bool includeMarks){
 	    sprintf(buffer,"%02dframe%05d_%03d_%02d",dataset,frameIdx,innerMargin,blkSize);
-	    frameName = string(buffer) + (includeMarks?marks:"");
+	    frameName = string(buffer) + (includeMarks?marksStr:"");
 	}
 
 	void readTrainingsdata(vector<short>& datasets, Mat& labelsMat, Mat& trainingsMat){
@@ -197,12 +199,12 @@ namespace io {
 		}
 	}
 
-	void readTrainingsdataOutput(string frameName, Mat& labelsMat, Mat& trainingsMat){
+	void readTrainingsdataOutput(string frameName, Mat& labelsMat, Mat& trainingsMat, bool useLBP, bool useColor){
 		vector<short> labels;
 		vector<vector<int> > featureVectors;
 
 	    string fnLbl = dirOutput+frameName+labelsPostfix;
-	    string fnFv = dirOutput+frameName+featVecsPostfix;
+	    string fnFv = dirOutput+frameName+(useLBP?lbpStr:"")+(useColor?colorStr:"")+featVecsPostfix;
 	    if(file_exists(fnLbl) && file_exists(fnFv)) {
 			cout<<"Reading trainingsdata from output of frame "<<frameName<<endl;
 		 	ifstream ifsLbl(fnLbl.c_str());
