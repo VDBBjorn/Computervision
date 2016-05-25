@@ -60,7 +60,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         //if(false){
             int blksInWidth = canny_output.cols/io::blkSize; // width/blkSize - 1, -1 to compensate for 0-indexing
             //rode outliers uithalen
-            // for(int j = 0; j < 10; j++){
+            for(int j = 0; j < 10; j++){
                 for(int z=blksInWidth; z<roadRegions[i].size()-blksInWidth; z++) {
                     if(roadRegions[i][z] == -1 && z%blksInWidth != 0 && z%blksInWidth != blksInWidth-1){
                         int aantalRodeBuren = 0;
@@ -90,12 +90,12 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
                         }
                     }
                 }
-            // }
+            }
 
             for(int j=0; j<roadRegions[i].size()-blksInWidth; j++) {
                 int blkX = (j%(blksInWidth-1))*io::blkSize;
                 int blkY = (j/(blksInWidth-1))*io::blkSize;
-                cout<<roadRegions[i].size()<<","<<j<<","<<blkX<<","<<blkY<<endl;
+                // cout<<roadRegions[i].size()<<","<<j<<","<<blkX<<","<<blkY<<endl;
                 if(roadRegions[i][j]!=1){
                     rectangle(canny_output
                         ,Point(blkX,blkY)
