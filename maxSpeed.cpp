@@ -56,20 +56,20 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         Canny( roads[i], canny_output, thresh, thresh*2, 3 );
 
         //ROAD DETECTION indien lijndetectie niet voldoende betrouwbaar is
-        //if(true){
         if(!lijndetectieBetrouwbaar[i]){
         //if(false){
+            int blksInWidth = canny_output.cols/io::blkSize; // width/blkSize - 1, -1 to compensate for 0-indexing
             //rode outliers uithalen
-            for(int j = 0; j < 10; j++){
-                for(int z=39; z<roadRegions[i].size()-39; z++) {
-                    if(roadRegions[i][z] == -1 && z%39 != 0 && z%39 != 38){
+            // for(int j = 0; j < 10; j++){
+                for(int z=blksInWidth; z<roadRegions[i].size()-blksInWidth; z++) {
+                    if(roadRegions[i][z] == -1 && z%blksInWidth != 0 && z%blksInWidth != blksInWidth-1){
                         int aantalRodeBuren = 0;
                         //boven
-                        if(roadRegions[i][z-39-1] != 1)
+                        if(roadRegions[i][z-blksInWidth-1] != 1)
                             aantalRodeBuren++;
-                        if(roadRegions[i][z-39] != 1)
+                        if(roadRegions[i][z-blksInWidth] != 1)
                             aantalRodeBuren++;
-                        if(roadRegions[i][z-39+1] != 1)
+                        if(roadRegions[i][z-blksInWidth+1] != 1)
                             aantalRodeBuren++;
                         //L&R
                         if(roadRegions[i][z-1] != 1)
@@ -77,28 +77,29 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
                         if(roadRegions[i][z+1] != 1)
                             aantalRodeBuren++;
                         //onder
-                        if(roadRegions[i][z+39-1] != 1)
+                        if(roadRegions[i][z+blksInWidth-1] != 1)
                             aantalRodeBuren++;
-                        if(roadRegions[i][z+39] != 1)
+                        if(roadRegions[i][z+blksInWidth] != 1)
                             aantalRodeBuren++;
-                        if(roadRegions[i][z+39+1] != 1)
+                        if(roadRegions[i][z+blksInWidth+1] != 1)
                             aantalRodeBuren++;
+
                         if(aantalRodeBuren < 4){
                             roadRegions[i][z] = 1;
-                            //cout << "PUNT " << i%39 << "," << i/39 << " groen gemaakt."<< endl;
+                            //cout << "PUNT " << i%blksInWidth << "," << i/blksInWidth << " groen gemaakt."<< endl;
                         }
                     }
                 }
-            }
+            // }
 
-            for(int j=0; j<roadRegions[i].size()-39; j++) {
-                int blkSize = io::blkSize;
-                int blkX = (j%39)*blkSize;
-                int blkY = (j/39)*blkSize;
+            for(int j=0; j<roadRegions[i].size()-blksInWidth; j++) {
+                int blkX = (j%(blksInWidth-1))*io::blkSize;
+                int blkY = (j/(blksInWidth-1))*io::blkSize;
+                cout<<roadRegions[i].size()<<","<<j<<","<<blkX<<","<<blkY<<endl;
                 if(roadRegions[i][j]!=1){
                     rectangle(canny_output
                         ,Point(blkX,blkY)
-                        ,Point(blkX+blkSize,blkY+blkSize)
+                        ,Point(blkX+io::blkSize,blkY+io::blkSize)
                         ,Scalar(255,255,255)
                         );
                 }
