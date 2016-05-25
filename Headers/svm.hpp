@@ -126,8 +126,7 @@ void my_svm::calculateScores(Mat& extLabels, Mat& extTrainingsMat) {
 		accuracy = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows)*100;
 		precision = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(1,0))*100);
 		recall = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(0,1)))*100;
-		if(confusion.at<int>(1,1) == 0) true_negative = 0;
-		else true_negative = ((double)confusion.at<int>(1,1)/(confusion.at<int>(1,1)+confusion.at<int>(1,0)))*100;	
+		true_negative = ((double)confusion.at<int>(1,1)/(confusion.at<int>(1,1)+confusion.at<int>(1,0)))*100;	
 		F = 2*(precision*recall)/(precision+recall);
 	}
     cout<<"Confusion matrix: "<<endl<<confusion<<endl;

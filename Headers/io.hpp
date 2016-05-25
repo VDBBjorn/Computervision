@@ -32,7 +32,7 @@ namespace io {
     const int frameInterval = 10;
     const int frameStopIdx = 50;
     const int innerMargin = 64;
-    const int blkSize = 16; // 8,16,32
+    const int blkSize = 32; // 8,16,32
     const bool includeMarks = false;
     const bool trainAuto = false;
     const bool useLBP = true; // Make sure to use either color, LBP or both

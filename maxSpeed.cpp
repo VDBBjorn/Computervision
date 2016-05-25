@@ -9,11 +9,12 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <dirent.h>
+#include <iomanip>
+
 #include "LineDetection/LineDetection.cpp"
 #include "Headers/lbpfeaturevector.hpp"
 #include "Headers/io.hpp"
-#include <dirent.h>
-#include <iomanip>
 #include "Headers/svm.hpp"
 
 using namespace std;
@@ -91,7 +92,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
             }
 
             for(int j=0; j<roadRegions[i].size()-39; j++) {
-                int blkSize = 32;
+                int blkSize = io::blkSize;
                 int blkX = (j%39)*blkSize;
                 int blkY = (j/39)*blkSize;
                 if(roadRegions[i][j]!=1){
@@ -135,11 +136,11 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         
         Mat dst;
         addWeighted( masks[i] , 1.0, frames[i], 1.0, 0.0, dst);
-        for( int i = 0; i< contours.size(); i++ )
+        for( int j = 0; j < contours.size(); j++ )
         {
             Scalar color = Scalar( 255,0,0 );
             //Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-            drawContours( dst, contours, i, color, 2, 8, hierarchy, 0, Point(0,0) );
+            drawContours( dst, contours, j, color, 2, 8, hierarchy, 0, Point(0,0) );
         }
         
         
@@ -201,7 +202,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         waitKey(0);*/
         io::checkDir("outputframes");
         stringstream ssOut;
-        ssOut << "outputframes/frame" << i << ".png";
+        ssOut << "outputframes/frame" << setfill('0') << std::setw(5) << i << ".png";
         imwrite(ssOut.str(),dst);
     }
     cout << "CRASHES: " << crash << endl;
@@ -229,7 +230,7 @@ vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames, vector<bool> 
     return lineContours;
 }
 
-vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
+vector<vector<int> > roadDetection(vector<Mat> & frames, int testDataset){
     Mat initLabels,initTrainingsdata;
 
     // vector<short> trainingDatasets;
@@ -243,7 +244,7 @@ vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
     int dataset = io::datasets[dSIdx];
     for(int fIdx=0;fIdx<io::frameStopIdx;fIdx+=io::frameInterval){
         io::buildFrameName(buffer,frameName,dataset,fIdx,io::innerMargin,io::blkSize,io::includeMarks);
-        io::readTrainingsdataOutput(frameName,initLabels,initTrainingsdata);
+        io::readTrainingsdataOutput(frameName,initLabels,initTrainingsdata,io::useLBP,io::useColor);
     }
     }
 
@@ -251,16 +252,14 @@ vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
     
     // Show decision regions by the SVM
     vector<vector<int> > roadRegions;
-    // for(int i = 0; i < frames.size(); i++){
-    for(int i = 0; i < 10; i++){
-        vector<int> vec;
 
-        LbpFeatureVector fv;
-        Mat features;
-        stringstream ss;
-        ss << datasetFolder << "/frame" << setfill('0') << std::setw(5) << i << ".png";
-        //cout << ss.str() << endl;
-        fv.processFrame(ss.str(), frames[i], features);
+    LbpFeatureVector fv;
+    Mat features;
+    for(int i = 0; i < frames.size(); i++){
+    // for(int i = 0; i < 10; i++){
+        vector<int> vec;
+        io::buildFrameName(buffer,frameName,testDataset,i,io::innerMargin,io::blkSize,io::includeMarks);
+        fv.processFrame(frameName, frames[i], features);
     
         for(int j=0; j<features.rows; j++) {
             Mat_<float> row = Mat(features, Rect(0,j,features.cols,1));
@@ -274,9 +273,11 @@ vector<vector<int> > roadDetection(vector<Mat> & frames, string datasetFolder){
 
 int main(int argc, char** argv){
     if(argc <= 1) {
-        cout << "add parameters: dataset folder" << endl;
+        cout << "add parameters: dataset idx (0.."<< (sizeof(io::datasets)/sizeof(int))-1 <<")" << endl;
         return 1;
     }
+    int testDatasetIdx = atoi(argv[1]);
+    string datasetFolder = io::datasetFolders[testDatasetIdx];
     
     vector<double> speeds;
     string line;
@@ -294,13 +295,12 @@ int main(int argc, char** argv){
         iss >> speed;
         speeds.push_back(speed);
     }
-    
-    vector<Mat> masks = read_images(argv[1],"mask%05d.png");
-    vector<Mat> frames = read_images(argv[1],"frame%05d.png");
+    vector<Mat> masks = read_images(datasetFolder,"mask%05d.png");
+    vector<Mat> frames = read_images(datasetFolder,"frame%05d.png");
     vector<bool> lijndetectieBetrouwbaar;
     vector<Mat> roads = detectLines(masks,frames,lijndetectieBetrouwbaar);
     cout << "lines done"<< endl;
-    vector<vector<int> > roadRegions = roadDetection(frames,argv[1]);
+    vector<vector<int> > roadRegions = roadDetection(frames,io::datasets[testDatasetIdx]);
     cout << "road done" << endl;
 
     /*for(int i = 0; i < roadRegions.size(); i++){
