@@ -58,9 +58,11 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         //ROAD DETECTION indien lijndetectie niet voldoende betrouwbaar is
         if(!lijndetectieBetrouwbaar[i]){
         //if(false){
-            int blksInWidth = canny_output.cols/io::blkSize; // width/blkSize - 1, -1 to compensate for 0-indexing
+            int blksInWidth = (canny_output.cols-2*io::lbpRadius)/io::blkSize; // (width-2*outerMargin)/blkSize - 1, -1 to compensate for 0-indexing
             //rode outliers uithalen
-            for(int j = 0; j < 10; j++){
+            bool changedOutlier = true;
+            while(changedOutlier){
+                changedOutlier = false;
                 for(int z=blksInWidth; z<roadRegions[i].size()-blksInWidth; z++) {
                     if(roadRegions[i][z] == -1 && z%blksInWidth != 0 && z%blksInWidth != blksInWidth-1){
                         int aantalRodeBuren = 0;
@@ -86,15 +88,16 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
 
                         if(aantalRodeBuren < 4){
                             roadRegions[i][z] = 1;
-                            //cout << "PUNT " << i%blksInWidth << "," << i/blksInWidth << " groen gemaakt."<< endl;
+                            changedOutlier = true;
+                            //cout << "PUNT " << z%blksInWidth << "," << z/blksInWidth << " groen gemaakt."<< endl;
                         }
                     }
                 }
             }
 
             for(int j=0; j<roadRegions[i].size()-blksInWidth; j++) {
-                int blkX = (j%(blksInWidth-1))*io::blkSize;
-                int blkY = (j/(blksInWidth-1))*io::blkSize;
+                int blkX = (j%blksInWidth)*io::blkSize;
+                int blkY = (j/blksInWidth)*io::blkSize;
                 // cout<<roadRegions[i].size()<<","<<j<<","<<blkX<<","<<blkY<<endl;
                 if(roadRegions[i][j]!=1){
                     rectangle(canny_output
@@ -231,12 +234,8 @@ vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames, vector<bool> 
     return lineContours;
 }
 
-vector<vector<int> > roadDetection(vector<Mat> & frames, int testDataset){
+vector<vector<int> > roadDetection(vector<Mat> & frames){
     Mat initLabels,initTrainingsdata;
-
-    // vector<short> trainingDatasets;
-    // trainingDatasets.push_back(1);
-    // io::readTrainingsdata(trainingDatasets,initLabels,initTraining);
 
     char buffer[30];
     string frameName;
@@ -257,11 +256,11 @@ vector<vector<int> > roadDetection(vector<Mat> & frames, int testDataset){
     LbpFeatureVector fv;
     Mat features;
     for(int i = 0; i < frames.size(); i++){
-    // for(int i = 0; i < 10; i++){
+    // for(int i = 0; i < 1; i++){
         vector<int> vec;
-        io::buildFrameName(buffer,frameName,testDataset,i,io::innerMargin,io::blkSize,io::includeMarks);
+        io::buildFrameName(buffer,frameName,0,i,0,fv.getBlkSize(),io::includeMarks);
         fv.processFrame(frameName, frames[i], features);
-    
+
         for(int j=0; j<features.rows; j++) {
             Mat_<float> row = Mat(features, Rect(0,j,features.cols,1));
             int response = svm.get_svm()->predict(row);
@@ -274,11 +273,10 @@ vector<vector<int> > roadDetection(vector<Mat> & frames, int testDataset){
 
 int main(int argc, char** argv){
     if(argc <= 1) {
-        cout << "add parameters: dataset idx (0.."<< (sizeof(io::datasets)/sizeof(int))-1 <<")" << endl;
+        cout << "add parameters: datasetfolder" << endl;
         return 1;
     }
-    int testDatasetIdx = atoi(argv[1]);
-    string datasetFolder = io::datasetFolders[testDatasetIdx];
+    string datasetFolder(argv[1]);
     
     vector<double> speeds;
     string line;
@@ -301,7 +299,7 @@ int main(int argc, char** argv){
     vector<bool> lijndetectieBetrouwbaar;
     vector<Mat> roads = detectLines(masks,frames,lijndetectieBetrouwbaar);
     cout << "lines done"<< endl;
-    vector<vector<int> > roadRegions = roadDetection(frames,io::datasets[testDatasetIdx]);
+    vector<vector<int> > roadRegions = roadDetection(frames);
     cout << "road done" << endl;
 
     /*for(int i = 0; i < roadRegions.size(); i++){

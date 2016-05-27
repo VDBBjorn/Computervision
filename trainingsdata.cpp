@@ -322,8 +322,7 @@ void parameterIterationTraining(bool relabel=true){
 }
 
 void fullTraining(bool relabel=false){
- //    int outerMargin(16),innerMargin(64);
- //    LbpFeatureVector fv(outerMargin,innerMargin);
+ //    LbpFeatureVector fv(io::outerMargin,io::innerMargin);
 
 	// vector<Mat> frames;
 	// string frameRegex = "frame%05d.png";

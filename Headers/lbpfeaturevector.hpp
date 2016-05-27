@@ -26,9 +26,7 @@ private:
 	int lbpRadius;
 	int histBins;
 public:
-	//LbpFeatureVector(): outerMargin(1),innerMargin(0),blkSize(32),lbpRadius(1),histBins(128){}
-
-	LbpFeatureVector(int _outerMargin=1,int _innerMargin=0,int _blkSize=io::blkSize,int _lbpRadius=1,int _histBins=128):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){}
+	LbpFeatureVector(int _outerMargin=io::lbpRadius,int _innerMargin=0,int _blkSize=io::blkSize,int _lbpRadius=io::lbpRadius,int _histBins=128):outerMargin(_outerMargin),innerMargin(_innerMargin),blkSize(_blkSize),lbpRadius(_lbpRadius),histBins(_histBins){}
 
 	int getOuterMargin(){ return outerMargin;}
 	int getInnerMargin(){ return innerMargin;}
@@ -196,12 +194,12 @@ public:
 		int imWidth=img.cols;
 		int imHeight=img.rows;
 
-		io::checkDir(io::dirOutput);
-		size_t pos1 = fnFrame.find_last_of("/")+1;
-		if(pos1 == string::npos) pos1=0;
-		size_t pos2 = fnFrame.find_last_of(".");
-		if(pos2 == string::npos) pos2=fnFrame.size();
-		string frameName = fnFrame.substr(pos1,pos2-pos1); // Remove folder prefixes and file extension
+		// io::checkDir(io::dirOutput);
+		// size_t pos1 = fnFrame.find_last_of("/")+1;
+		// if(pos1 == string::npos) pos1=0;
+		// size_t pos2 = fnFrame.find_last_of(".");
+		// if(pos2 == string::npos) pos2=fnFrame.size();
+		// string frameName = fnFrame.substr(pos1,pos2-pos1); // Remove folder prefixes and file extension
 
 
 		// Number of blocks in width and height
