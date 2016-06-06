@@ -12,7 +12,7 @@
 #include <dirent.h>
 #include <iomanip>
 
-#include "LineDetection/LineDetection.cpp"
+#include "Headers/LineDetection.cpp"
 #include "Headers/lbpfeaturevector.hpp"
 #include "Headers/io.hpp"
 #include "Headers/svm.hpp"
@@ -66,9 +66,9 @@ bool isRoad(vector<int> & roadRegions, int blksInWidth, int frameRows, int frame
     }
 }
 
-void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds, vector<bool> & lijndetectieBetrouwbaar) {
+void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds) {
     int crash = 0;
-    RNG rng(12345);
+
     int thresh = 255;
     for(int i = 0; i<masks.size(); i++) {
         Mat col = cv::Mat::ones(roads[i].rows, 1, roads[i].type());
@@ -91,62 +91,59 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
             roadRegions[i][j] = 1;
         }
 
-        //ROAD DETECTION indien lijndetectie niet voldoende betrouwbaar is
-        if(!lijndetectieBetrouwbaar[i]){
-        //if(false){
-            //rode outliers uithalen
-            bool changedOutlier = true;
-            while(changedOutlier){
-                changedOutlier = false;
-                for(int z=blksInWidth; z<roadRegions[i].size()-blksInWidth; z++) {
-                    if(roadRegions[i][z] == -1 && z%blksInWidth != 0 && z%blksInWidth != blksInWidth-1){
-                        int aantalRodeBuren = 0;
-                        //boven
-                        if(roadRegions[i][z-blksInWidth-1] != 1)
-                            aantalRodeBuren++;
-                        if(roadRegions[i][z-blksInWidth] != 1)
-                            aantalRodeBuren++;
-                        if(roadRegions[i][z-blksInWidth+1] != 1)
-                            aantalRodeBuren++;
-                        //L&R
-                        if(roadRegions[i][z-1] != 1)
-                            aantalRodeBuren++;
-                        if(roadRegions[i][z+1] != 1)
-                            aantalRodeBuren++;
-                        //onder
-                        if(roadRegions[i][z+blksInWidth-1] != 1)
-                            aantalRodeBuren++;
-                        if(roadRegions[i][z+blksInWidth] != 1)
-                            aantalRodeBuren++;
-                        if(roadRegions[i][z+blksInWidth+1] != 1)
-                            aantalRodeBuren++;
 
-                        if(aantalRodeBuren < 4){
-                            roadRegions[i][z] = 1;
-                            changedOutlier = true;
-                            //cout << "PUNT " << z%blksInWidth << "," << z/blksInWidth << " groen gemaakt."<< endl;
-                        }
+        //rode outliers uithalen
+        bool changedOutlier = true;
+        while(changedOutlier) {
+            changedOutlier = false;
+            for (int z = blksInWidth; z < roadRegions[i].size() - blksInWidth; z++) {
+                if (roadRegions[i][z] == -1 && z % blksInWidth != 0 && z % blksInWidth != blksInWidth - 1) {
+                    int aantalRodeBuren = 0;
+                    //boven
+                    if (roadRegions[i][z - blksInWidth - 1] != 1)
+                        aantalRodeBuren++;
+                    if (roadRegions[i][z - blksInWidth] != 1)
+                        aantalRodeBuren++;
+                    if (roadRegions[i][z - blksInWidth + 1] != 1)
+                        aantalRodeBuren++;
+                    //L&R
+                    if (roadRegions[i][z - 1] != 1)
+                        aantalRodeBuren++;
+                    if (roadRegions[i][z + 1] != 1)
+                        aantalRodeBuren++;
+                    //onder
+                    if (roadRegions[i][z + blksInWidth - 1] != 1)
+                        aantalRodeBuren++;
+                    if (roadRegions[i][z + blksInWidth] != 1)
+                        aantalRodeBuren++;
+                    if (roadRegions[i][z + blksInWidth + 1] != 1)
+                        aantalRodeBuren++;
+
+                    if (aantalRodeBuren < 4) {
+                        roadRegions[i][z] = 1;
+                        changedOutlier = true;
+                        //cout << "PUNT " << z%blksInWidth << "," << z/blksInWidth << " groen gemaakt."<< endl;
                     }
                 }
             }
-
-            // Add non-road rectangles to the canny output
-            // --> Disabled
-            /*
-            for(int j=0; j<roadRegions[i].size()-blksInWidth; j++) {
-                int blkX = (j%blksInWidth)*io::blkSize;
-                int blkY = (j/blksInWidth)*io::blkSize;
-                // cout<<roadRegions[i].size()<<","<<j<<","<<blkX<<","<<blkY<<endl;
-                if(roadRegions[i][j]!=1){
-                    rectangle(canny_output
-                        ,Point(blkX,blkY)
-                        ,Point(blkX+io::blkSize,blkY+io::blkSize)
-                        ,Scalar(255,255,255)
-                        );
-                }
-            }*/
         }
-        
+
+        // Add non-road rectangles to the canny output
+        // --> Disabled
+        /*
+        for(int j=0; j<roadRegions[i].size()-blksInWidth; j++) {
+            int blkX = (j%blksInWidth)*io::blkSize;
+            int blkY = (j/blksInWidth)*io::blkSize;
+            // cout<<roadRegions[i].size()<<","<<j<<","<<blkX<<","<<blkY<<endl;
+            if(roadRegions[i][j]!=1){
+                rectangle(canny_output
+                    ,Point(blkX,blkY)
+                    ,Point(blkX+io::blkSize,blkY+io::blkSize)
+                    ,Scalar(255,255,255)
+                    );
+            }
+        }*/
+
         //Randen van de weg vinden
         findContours( canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0,0) );
         //Snijpunten tussen mask en wegranden toevoegen
@@ -271,20 +268,12 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
     cout << "CRASHES: " << crash << endl;
 }
 
-vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames, vector<bool> & lijndetectieBetrouwbaar){
+vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames){
     LineDetection ld;
-    int initialHoughVote = 150;
-    int initialHoughVote2 = 150;
-    int houghVote = initialHoughVote;
-    int houghVote2 = initialHoughVote2;
     vector<Mat> lineContours;
     for(int i=0; i < frames.size(); i++) {
-        bool drawLines = true; // draw detected lines on source image
-        bool debugLinedetection = false; // wait after each frame and show all intermediate results
-        bool betrouwbaar = false;
-        Mat lineContour = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection, betrouwbaar);
+        Mat lineContour = ld.getLinesFromImage(frames[i]);
         lineContours.push_back(lineContour);
-        lijndetectieBetrouwbaar.push_back(betrouwbaar);
     }
     return lineContours;
 }
@@ -349,11 +338,15 @@ int main(int argc, char** argv){
         iss >> speed;
         speeds.push_back(speed);
     }
-    vector<Mat> masks = read_images(datasetFolder,"mask%05d.png");
-    vector<Mat> frames = read_images(datasetFolder,"frame%05d.png");
+    vector<Mat> masks_all = read_images(datasetFolder,"mask%05d.png");
+    vector<Mat> frames_all = read_images(datasetFolder,"frame%05d.png");
 
-    vector<bool> lijndetectieBetrouwbaar;
-    vector<Mat> roads = detectLines(masks,frames,lijndetectieBetrouwbaar);
+    vector<Mat> masks;
+    vector<Mat> frames;
+    masks.push_back(masks_all[0]);
+    frames.push_back(frames_all[0]);
+
+    vector<Mat> roads = detectLines(masks,frames);
     cout << "lines done"<< endl;
     vector<vector<int> > roadRegions = roadDetection(frames);
     cout << "road done" << endl;
@@ -367,7 +360,7 @@ int main(int argc, char** argv){
     
     system("exec rm -r outputframes/*");
 
-    showMaxSpeed(masks,roads,frames,roadRegions,speeds,lijndetectieBetrouwbaar);
+    showMaxSpeed(masks,roads,frames,roadRegions,speeds);
     
     //waitKey(0);
     destroyAllWindows();

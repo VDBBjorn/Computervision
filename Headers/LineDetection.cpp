@@ -1,9 +1,13 @@
 #include <cstdio>
 #include <string>
+#include <vector>
 #include "opencv2/opencv.hpp"
 #include "opencv2/highgui.hpp"
-#include <vector>
-#include "LineFinder.hpp"
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+#define PI 3.1415926
+
 
 using namespace std;
 using namespace cv;
@@ -22,6 +26,8 @@ public:
         int houghPMinLineLength = 1;
         int houghPGap = 20;
         int houghPMinVote = 5;
+        double houghPDeltaRho = 1;
+        double houghPDeltaTheta = PI/180;
 
         // set the ROI for the image
         Rect roi(0, image.cols / 4, image.cols - 1, image.rows - image.cols / 4);
@@ -33,14 +39,12 @@ public:
         Mat contoursInv;
         threshold(contours, contoursInv, threshThreshold, threshMaxval, THRESH_BINARY_INV);
 
-        // Create LineFinder instance and do probabilistic Hough
-        LineFinder ld;
+        // Do probabilistic Hough
         Mat houghP(imgROI.size(), CV_8U, Scalar(0));
-        ld.setLineLengthAndGap(houghPMinLineLength, houghPGap);
-        ld.setShift(0);
-        ld.setMinVote(houghPMinVote);
-        ld.findLines(contours);
-        ld.drawDetectedLines(houghP);
+        vector<Vec4i> lines;
+
+        HoughLinesP(contours,lines,houghPDeltaRho,houghPDeltaTheta,houghPMinVote, houghPMinLineLength, houghPGap);
+        drawDetectedLines(houghP, lines);
 
         // Uncomment to test parameters
         /*
@@ -53,5 +57,21 @@ public:
 
         return houghP;
     };
+
+    // Draw the detected lines on an image
+    void drawDetectedLines(Mat &image, vector<Vec4i> & lines, cv::Scalar color=cv::Scalar(255)) {
+
+        // Draw the lines
+        vector<Vec4i>::const_iterator it2= lines.begin();
+
+        while (it2!=lines.end()) {
+
+            Point pt1((*it2)[0],(*it2)[1]);
+            Point pt2((*it2)[2],(*it2)[3]);
+
+            line( image, pt1, pt2, color, 6 );
+            ++it2;
+        }
+    }
 
 };
