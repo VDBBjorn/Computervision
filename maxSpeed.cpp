@@ -338,13 +338,8 @@ int main(int argc, char** argv){
         iss >> speed;
         speeds.push_back(speed);
     }
-    vector<Mat> masks_all = read_images(datasetFolder,"mask%05d.png");
-    vector<Mat> frames_all = read_images(datasetFolder,"frame%05d.png");
-
-    vector<Mat> masks;
-    vector<Mat> frames;
-    masks.push_back(masks_all[0]);
-    frames.push_back(frames_all[0]);
+    vector<Mat> masks = read_images(datasetFolder,"mask%05d.png");
+    vector<Mat> frames = read_images(datasetFolder,"frame%05d.png");
 
     vector<Mat> roads = detectLines(masks,frames);
     cout << "lines done"<< endl;
