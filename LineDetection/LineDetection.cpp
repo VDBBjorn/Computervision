@@ -26,7 +26,7 @@ public:
 
         // Canny algorithm
         Mat contours;
-        Canny(imgROI, contours, 50, 250);
+        Canny(imgROI, contours, 60, 140);
         Mat contoursInv;
         threshold(contours, contoursInv, 128, 255, THRESH_BINARY_INV);
 
@@ -42,8 +42,8 @@ public:
         LineFinder ld;
 
         // Set probabilistic Hough parameters
-        ld.setLineLengthAndGap(60, 30);
-        ld.setMinVote(2);
+        ld.setLineLengthAndGap(1, 20);
+        ld.setMinVote(5);
 
         // Detect lines
         li = ld.findLines(contours);

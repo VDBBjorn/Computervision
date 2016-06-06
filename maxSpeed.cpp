@@ -37,6 +37,35 @@ vector<Mat> read_images(String folder, String regex) {
     return matrices;
 }
 
+/**
+ * Calculate for a given point whether it is detected as road or not.
+ * For safety reasons, a point is only considered as road when the above, left and right blocks are classified as road
+ */
+bool isRoad(vector<int> & roadRegions, int blksInWidth, int frameRows, int frameCols, int x, int y) {
+    int j = (y / io::blkSize) * blksInWidth + (x / io::blkSize);
+
+    // most left and right column are never considered as road, in order to limit the speed when
+    // reaching the edge of the frame (i.e. necessary on the roundabout in Dataset 01)
+    if(x < io::blkSize || x >= frameCols - io::blkSize) return false;
+
+    // the lowest row is always considered as road
+    if(y >= frameRows - io::blkSize) return true;
+
+    if(
+        roadRegions[j] == 1 &&
+        // above
+        roadRegions[j-blksInWidth-1] == 1 &&
+        roadRegions[j-blksInWidth] == 1 &&
+        roadRegions[j-blksInWidth+1] == 1 &&
+
+        // left & right
+        roadRegions[j-1] == 1 &&
+        roadRegions[j+1] == 1
+    ) {
+        return true;
+    }
+}
+
 void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds, vector<bool> & lijndetectieBetrouwbaar) {
     int crash = 0;
     RNG rng(12345);
@@ -55,10 +84,16 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         //lijndetectie op wegdetectie
         Canny( roads[i], canny_output, thresh, thresh*2, 3 );
 
+        int blksInWidth = (canny_output.cols-2*io::lbpRadius)/io::blkSize; // (width-2*outerMargin)/blkSize - 1, -1 to compensate for 0-indexing
+
+        // The lowest blocklines are always considered as road and are included when calculating the outliers
+        for(int j=(frames[i].rows - io::blkSize * 2) / io::blkSize * blksInWidth; j < roadRegions[i].size(); j++) {
+            roadRegions[i][j] = 1;
+        }
+
         //ROAD DETECTION indien lijndetectie niet voldoende betrouwbaar is
         if(!lijndetectieBetrouwbaar[i]){
         //if(false){
-            int blksInWidth = (canny_output.cols-2*io::lbpRadius)/io::blkSize; // (width-2*outerMargin)/blkSize - 1, -1 to compensate for 0-indexing
             //rode outliers uithalen
             bool changedOutlier = true;
             while(changedOutlier){
@@ -95,6 +130,9 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
                 }
             }
 
+            // Add non-road rectangles to the canny output
+            // --> Disabled
+            /*
             for(int j=0; j<roadRegions[i].size()-blksInWidth; j++) {
                 int blkX = (j%blksInWidth)*io::blkSize;
                 int blkY = (j/blksInWidth)*io::blkSize;
@@ -106,7 +144,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
                         ,Scalar(255,255,255)
                         );
                 }
-            }
+            }*/
         }
         
         //Randen van de weg vinden
@@ -121,8 +159,12 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
                 for(int z = 0; z < it.count; z++, ++it){
                     it.pos();
                     vec = masks[i].at<cv::Vec3b>(it.pos().y,it.pos().x);
-                    if(vec[0] != 0 && it.pos().y < masks[i].size().height - 5)
-                        intersections.push_back(it.pos());
+
+                    // Only add line segments when it is clear that it isn't on the road
+                    if(!isRoad(roadRegions[i], blksInWidth, frames[i].rows, frames[i].cols, it.pos().x, it.pos().y)) {
+                        if (vec[0] != 0 && it.pos().y < masks[i].size().height - 5)
+                            intersections.push_back(it.pos());
+                    }
                 }
             }
         }
@@ -140,6 +182,22 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         
         Mat dst;
         addWeighted( masks[i] , 1.0, frames[i], 1.0, 0.0, dst);
+
+        // Visualize road blocks on the output frame
+        for(int x=0; x < canny_output.cols; x+=io::blkSize) {
+            for(int y=0; y < canny_output.rows; y+=io::blkSize) {
+                if(isRoad(roadRegions[i], blksInWidth, frames[i].rows, frames[i].cols, x, y)) {
+                    rectangle(dst
+                            ,Point(x,y)
+                            ,Point(x+io::blkSize,y+io::blkSize)
+                            ,Scalar(255,0,0)
+                    );
+
+                }
+            }
+        }
+
+        // Visualize detected lines
         for( int j = 0; j < contours.size(); j++ )
         {
             Scalar color = Scalar( 255,0,0 );
@@ -148,7 +206,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         }
         
         
-        // Intersectiepunten
+        // Intersectiepunten (= groene zone)
         Scalar color = Scalar( 0,255,0 );
         for(int j = 0; j < intersections.size(); j++){
             //cout << intersections[j] << endl;
@@ -192,7 +250,8 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
             putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,0,255 ), 3);
             crash++;
         }
-        
+
+
         //print result
         //cout << "FRAME " << i << ": " << laagsteSnelheid << " (" << speeds[i] << ") -> " << laagsteSnelheid-speeds[i] << endl;
 
@@ -226,10 +285,6 @@ vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames, vector<bool> 
         Mat lineContour = ld.getLinesFromImage(frames[i], initialHoughVote, houghVote,initialHoughVote2, houghVote2, drawLines, debugLinedetection, betrouwbaar);
         lineContours.push_back(lineContour);
         lijndetectieBetrouwbaar.push_back(betrouwbaar);
-        //namedWindow("LineContours");
-        //imshow("LineContours",lineContour);
-        //waitKey(0);
-        //destroyAllWindows();
     }
     return lineContours;
 }
@@ -296,6 +351,7 @@ int main(int argc, char** argv){
     }
     vector<Mat> masks = read_images(datasetFolder,"mask%05d.png");
     vector<Mat> frames = read_images(datasetFolder,"frame%05d.png");
+
     vector<bool> lijndetectieBetrouwbaar;
     vector<Mat> roads = detectLines(masks,frames,lijndetectieBetrouwbaar);
     cout << "lines done"<< endl;
