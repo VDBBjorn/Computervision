@@ -12,7 +12,7 @@
 #include <dirent.h>
 #include <iomanip>
 
-#include "Headers/LineDetection.cpp"
+#include "Headers/LineDetection.hpp"
 #include "Headers/lbpfeaturevector.hpp"
 #include "Headers/io.hpp"
 #include "Headers/svm.hpp"
@@ -237,7 +237,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         }
         
         if(laagsteSnelheid!= 90)
-            laagsteSnelheid -=2;
+            laagsteSnelheid -=1;
         
         stringstream ss;
         ss << "Max speed (zelf): " << laagsteSnelheid << " km/u, gtdistances: " << speeds[i] << " km/u";

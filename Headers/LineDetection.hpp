@@ -17,15 +17,19 @@ class LineDetection {
 
 public:
     Mat getLinesFromImage(Mat &image) {
+        return getLinesFromImage(image, false);
+    }
+
+    Mat getLinesFromImage(Mat &image, bool showSteps) {
 
         // parameters
-        int cannyThreshold1 = 60;
-        int cannyThreshold2 = 140;
-        int threshThreshold = 128;
+        int cannyLowerThreshold = 80;
+        int cannyUpperThreshold = cannyLowerThreshold * 2;
+        int threshThreshold = 170;
         int threshMaxval = 255;
-        int houghPMinLineLength = 1;
+        int houghPMinLineLength = 10;
         int houghPGap = 20;
-        int houghPMinVote = 5;
+        int houghPMinVote = 30;
         double houghPDeltaRho = 1;
         double houghPDeltaTheta = PI/180;
 
@@ -35,7 +39,7 @@ public:
 
         // Canny algorithm
         Mat contours;
-        Canny(imgROI, contours, cannyThreshold1, cannyThreshold2);
+        Canny(imgROI, contours, cannyLowerThreshold, cannyUpperThreshold, 3);
         Mat contoursInv;
         threshold(contours, contoursInv, threshThreshold, threshMaxval, THRESH_BINARY_INV);
 
@@ -46,14 +50,17 @@ public:
         HoughLinesP(contours,lines,houghPDeltaRho,houghPDeltaTheta,houghPMinVote, houghPMinLineLength, houghPGap);
         drawDetectedLines(houghP, lines);
 
-        // Uncomment to test parameters
-        /*
-        namedWindow( "Source", CV_WINDOW_AUTOSIZE );
-        imshow( "Source", image );
-        namedWindow( "Lines", CV_WINDOW_AUTOSIZE );
-        imshow( "Lines", houghP );
-        waitKey(0);
-        */
+
+        if(showSteps) {
+            namedWindow( "Input", CV_WINDOW_AUTOSIZE );
+            imshow( "Input", image );
+            namedWindow( "Canny", CV_WINDOW_AUTOSIZE );
+            imshow( "Canny", contours );
+            namedWindow( "threshold", CV_WINDOW_AUTOSIZE );
+            imshow( "threshold", contoursInv );
+            namedWindow( "HoughLinesP", CV_WINDOW_AUTOSIZE );
+            imshow( "HoughLinesP", houghP );
+        }
 
         return houghP;
     };
@@ -69,7 +76,7 @@ public:
             Point pt1((*it2)[0],(*it2)[1]);
             Point pt2((*it2)[2],(*it2)[3]);
 
-            line( image, pt1, pt2, color, 6 );
+            line( image, pt1, pt2, color, 1 );
             ++it2;
         }
     }
