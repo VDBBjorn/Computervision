@@ -23,17 +23,18 @@ public:
     Mat getLinesFromImage(Mat &image, bool showSteps) {
 
 
+        // Filter hough detected lines by angle
+        int minAngle = 20;
+        int maxAngle = 80;
 
         // parameters
-        int cannyLowerThreshold = 28;
+        int cannyLowerThreshold = 40; // 40
         int cannyUpperThreshold = cannyLowerThreshold * 2;
-        int threshThreshold = 240;
-        int threshMaxval = 255;
-        int houghPMinLineLength = 60;
-        int houghPGap = 40;
-        int houghPMinVote = 5;
+        int houghPMinLineLength = 7;
+        int houghPGap = 10;
+        int houghPMinVote = 7;
         double houghPDeltaRho = 1;
-        double houghPDeltaTheta = PI/180;
+        double houghPDeltaTheta = PI / 180;
 
         // set the ROI for the image
         Rect roi(0, image.cols / 4, image.cols - 1, image.rows - image.cols / 4);
@@ -42,62 +43,59 @@ public:
 
         Mat tmp;
         Size size;
-        size.width  = 90;
-        size.height = 15;
+        size.width = 100; // 100
+        size.height = 30; // 20
         Mat kernel = getStructuringElement(MORPH_ELLIPSE, size);
-        //erode verticaal
-        erode(imgROI,tmp,kernel);
+        erode(imgROI, tmp, kernel);
 
-        size.width  = 60;
-        size.height = 10;
+        size.width = 85; // 85
+        size.height = 25; // 18
         kernel = getStructuringElement(MORPH_ELLIPSE, size);
-        dilate(tmp,tmp,kernel);
+        dilate(tmp, tmp, kernel);
 
 
         // Canny algorithm
         Mat contours;
-        Mat result;
+        Mat result(imgROI.size(), CV_8U, Scalar(0));
         Canny(tmp, contours, cannyLowerThreshold, cannyUpperThreshold, 3);
         Mat contoursInv;
-        //threshold(contours, contoursInv, threshThreshold, threshMaxval, THRESH_BINARY_INV);
         contours.copyTo(result);
 
         // Do probabilistic Hough
-        Mat houghP(imgROI.size(), CV_8U, Scalar(0));
         vector<Vec4i> lines;
 
         HoughLinesP(contours,lines,houghPDeltaRho,houghPDeltaTheta,houghPMinVote, houghPMinLineLength, houghPGap);
-        drawDetectedLines(result, lines);
+        //drawDetectedLines(result, lines);
 
 
-        if(showSteps) {
-            namedWindow( "Input", CV_WINDOW_AUTOSIZE );
-            imshow( "Input", tmp );
-            namedWindow( "Canny", CV_WINDOW_AUTOSIZE );
-            imshow( "Canny", contours );
-          /*  namedWindow( "threshold", CV_WINDOW_AUTOSIZE );
-            imshow( "threshold", contoursInv ); */
-           /* namedWindow( "HoughLinesP", CV_WINDOW_AUTOSIZE );
-            imshow( "HoughLinesP", houghP );*/
-            namedWindow( "result", CV_WINDOW_AUTOSIZE );
-            imshow( "result", result );
+        if (showSteps) {
+            namedWindow("Input", CV_WINDOW_AUTOSIZE);
+            imshow("Input", tmp);
+            namedWindow("Canny", CV_WINDOW_AUTOSIZE);
+            imshow("Canny", contours);
+            /*  namedWindow( "threshold", CV_WINDOW_AUTOSIZE );
+              imshow( "threshold", contoursInv ); */
+            /* namedWindow( "HoughLinesP", CV_WINDOW_AUTOSIZE );
+             imshow( "HoughLinesP", houghP );*/
+            namedWindow("result", CV_WINDOW_AUTOSIZE);
+            imshow("result", result);
         }
 
         return result;
     };
 
     // Draw the detected lines on an image
-    void drawDetectedLines(Mat &image, vector<Vec4i> & lines, cv::Scalar color=cv::Scalar(255)) {
+    void drawDetectedLines(Mat &image, vector<Vec4i> &lines, cv::Scalar color = cv::Scalar(255)) {
 
         // Draw the lines
-        vector<Vec4i>::const_iterator it2= lines.begin();
+        vector<Vec4i>::const_iterator it2 = lines.begin();
 
-        while (it2!=lines.end()) {
+        while (it2 != lines.end()) {
 
-            Point pt1((*it2)[0],(*it2)[1]);
-            Point pt2((*it2)[2],(*it2)[3]);
+            Point pt1((*it2)[0], (*it2)[1]);
+            Point pt2((*it2)[2], (*it2)[3]);
 
-            line( image, pt1, pt2, color, 1 );
+            line(image, pt1, pt2, color, 1);
             ++it2;
         }
     }
