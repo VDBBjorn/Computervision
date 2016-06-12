@@ -32,12 +32,14 @@ public:
 		svm = SVM::create();
 	    svm->setType(SVM::C_SVC);
 	    svm->setKernel(SVM::RBF);
+	    // svm->setKernel(SVM::LINEAR);
 	    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
 	    Ptr<TrainData> trainData_ptr = TrainData::create(trainingsMat, ROW_SAMPLE , labelsMat);
 		cout << "training the SVM... "<<(trainAuto? "(automatically, this could take a while...)" : "") << endl;
 	    if(trainAuto){
 		    /* Automatic training */
-		    svm->trainAuto(trainData_ptr,10,SVM::getDefaultGrid(SVM::C),SVM::getDefaultGrid(SVM::GAMMA),ParamGrid(),ParamGrid(),ParamGrid(),ParamGrid(),true);
+		    ParamGrid emptyGrid(0,0,0);
+		    svm->trainAuto(trainData_ptr,10,SVM::getDefaultGrid(SVM::C),SVM::getDefaultGrid(SVM::GAMMA),emptyGrid,emptyGrid,emptyGrid,emptyGrid,true);
 		}else{
 		    /* Hardcoded params */
 		    svm->setC(io::C);

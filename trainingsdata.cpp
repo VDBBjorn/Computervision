@@ -199,7 +199,7 @@ void parameterIterationTraining(bool relabel=true){
     int frameInterval = 10;
     // int frameStopIdx = io::FRAME_MAX_IDX;
     int frameStopIdx = 50;
-	bool trainAuto = false; // Whether or not to use automatic training for SVM
+	bool trainAuto = true; // Whether or not to use automatic training for SVM
 	bool includeMarksVals[] = {false,true};
 	bool useColorVals[] = {false,true,true};
 	bool useLBPVals[] = {true,false,true};
@@ -266,14 +266,30 @@ void parameterIterationTraining(bool relabel=true){
 	string fnFrameOutput = io::dirOutputLogging+"output_"+io::currentDateTime()+".csv";
 	csv.open(fnFrameOutput.c_str(),ios::out);
 
-	for(int i=0; i<nDatasets-1; i++){
-		for(int j=i+1;j<nDatasets;j++){
-			set<int> tS;
-			tS.insert(datasets[i]);
-			tS.insert(datasets[j]);
-			trainingsSets.push_back(tS);
+	bool useThreeTrainingsSets = false;
+	if(useThreeTrainingsSets){
+		for(int i=0; i<nDatasets-2; i++){
+			for(int j=i+1;j<nDatasets-1;j++){
+				for(int k=j+1;k<nDatasets;k++){
+					set<int> tS;
+					tS.insert(datasets[i]);
+					tS.insert(datasets[j]);
+					tS.insert(datasets[k]);
+					trainingsSets.push_back(tS);
+				}
+			}
+		}
+	}else{
+		for(int i=0; i<nDatasets-1; i++){
+			for(int j=i+1;j<nDatasets;j++){
+				set<int> tS;
+				tS.insert(datasets[i]);
+				tS.insert(datasets[j]);
+				trainingsSets.push_back(tS);
+			}
 		}
 	}
+
 	if(trainingsSets.empty() && nDatasets > 0){ // Single dataset
 		set<int> tS;
 		tS.insert(datasets[0]);
