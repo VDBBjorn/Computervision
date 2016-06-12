@@ -22,14 +22,16 @@ public:
 
     Mat getLinesFromImage(Mat &image, bool showSteps) {
 
+
+
         // parameters
-        int cannyLowerThreshold = 80;
+        int cannyLowerThreshold = 28;
         int cannyUpperThreshold = cannyLowerThreshold * 2;
-        int threshThreshold = 170;
+        int threshThreshold = 240;
         int threshMaxval = 255;
-        int houghPMinLineLength = 10;
-        int houghPGap = 20;
-        int houghPMinVote = 30;
+        int houghPMinLineLength = 60;
+        int houghPGap = 40;
+        int houghPMinVote = 5;
         double houghPDeltaRho = 1;
         double houghPDeltaTheta = PI/180;
 
@@ -37,32 +39,51 @@ public:
         Rect roi(0, image.cols / 4, image.cols - 1, image.rows - image.cols / 4);
         Mat imgROI = image(roi);
 
+
+        Mat tmp;
+        Size size;
+        size.width  = 90;
+        size.height = 15;
+        Mat kernel = getStructuringElement(MORPH_ELLIPSE, size);
+        //erode verticaal
+        erode(imgROI,tmp,kernel);
+
+        size.width  = 60;
+        size.height = 10;
+        kernel = getStructuringElement(MORPH_ELLIPSE, size);
+        dilate(tmp,tmp,kernel);
+
+
         // Canny algorithm
         Mat contours;
-        Canny(imgROI, contours, cannyLowerThreshold, cannyUpperThreshold, 3);
+        Mat result;
+        Canny(tmp, contours, cannyLowerThreshold, cannyUpperThreshold, 3);
         Mat contoursInv;
-        threshold(contours, contoursInv, threshThreshold, threshMaxval, THRESH_BINARY_INV);
+        //threshold(contours, contoursInv, threshThreshold, threshMaxval, THRESH_BINARY_INV);
+        contours.copyTo(result);
 
         // Do probabilistic Hough
         Mat houghP(imgROI.size(), CV_8U, Scalar(0));
         vector<Vec4i> lines;
 
         HoughLinesP(contours,lines,houghPDeltaRho,houghPDeltaTheta,houghPMinVote, houghPMinLineLength, houghPGap);
-        drawDetectedLines(houghP, lines);
+        drawDetectedLines(result, lines);
 
 
         if(showSteps) {
             namedWindow( "Input", CV_WINDOW_AUTOSIZE );
-            imshow( "Input", image );
+            imshow( "Input", tmp );
             namedWindow( "Canny", CV_WINDOW_AUTOSIZE );
             imshow( "Canny", contours );
-            namedWindow( "threshold", CV_WINDOW_AUTOSIZE );
-            imshow( "threshold", contoursInv );
-            namedWindow( "HoughLinesP", CV_WINDOW_AUTOSIZE );
-            imshow( "HoughLinesP", houghP );
+          /*  namedWindow( "threshold", CV_WINDOW_AUTOSIZE );
+            imshow( "threshold", contoursInv ); */
+           /* namedWindow( "HoughLinesP", CV_WINDOW_AUTOSIZE );
+            imshow( "HoughLinesP", houghP );*/
+            namedWindow( "result", CV_WINDOW_AUTOSIZE );
+            imshow( "result", result );
         }
 
-        return houghP;
+        return result;
     };
 
     // Draw the detected lines on an image
