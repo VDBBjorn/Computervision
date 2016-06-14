@@ -269,7 +269,9 @@ Overall we can conclude that using only LBP with road marks shows the optimal re
 \caption{Comparision of F-scores for 16x16px block size with road marks using RBF kernel }
 \label{fig:16_wi_roadmarks}
 \end{figure}
-\newpage
+
+Considering the results of the different scenarios, we can conclude that training on dataset four results in poorer classification overall. This is because another type of road is used in this dataset, conflicting with the more common road type present in the other datasets. This distorts the classifier increases misclassifications.
+
 \noindent In retrospect, the optimal parameters for our classification problem are:
 \begin{itemize}
 \item RBF kernel
