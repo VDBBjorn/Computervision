@@ -15,10 +15,10 @@
 \mainmatter  % start of an individual contribution
 
 % first the title is needed
-\title{Speed estimation using SVM classification and edge detection}
+\title{Speed estimation for vehicles using \\SVM classification and edge detection}
 
 % a short form should be given in case it is too long for the running head
-\titlerunning{Speed estimation using SVM classification and edge detection}
+\titlerunning{Speed estimation for vehicles using SVM classification and edge detection}
 
 % the name(s) of the author(s) follow(s) next
 %
@@ -28,7 +28,7 @@
 %
 \author{Mathias Dierickx\and Tim Ranson\and Maarten Tindemans\and Bjorn Vandenbussche}
 %
-\authorrunning{Speed estimation using SVM classification and edge detection}
+\authorrunning{Speed estimation for vehicles using SVM classification and edge detection}
 % (feature abused for this document to repeat the title also on left hand pages)
 
 % the affiliations are given next; don't give your e-mail address
@@ -86,7 +86,9 @@ TODO: Mathias
 \section{Method}
 In order to determine the maximum speed of a vehicle two image processing techniques are used: SVM classification and edge detection. We first try to rely on edge detection to find the contours of the lanes where driving is permitted (i.e. where no obstacles are found). We estimate the reliability of the edge detection and incorporate road detection using the SVM classifier when needed.
 
-For the implementation of our method, we use OpenCV 3.1 \cite{Bradski2000} and C++. 
+For the implementation of our method, we use OpenCV 3.1 \cite{Bradski2000} and C++. Four different datasets were used to either or test the solution.
+
+\textbf{TODO}: kort over training van classificatie  (TIM)
 
 \subsection{Parameters for SVM classification}\label{parameters-classification}
 The goal of this classifier is to determine what pixels are part of the road and which are not. We will describe multiple tunable parameters in order to get optimal classification for road detection. These parameters determine both the length and values of the feature vectors, which are then fed to the SVM classifier. We compare classification results varying these parameters for the feature vector in section \ref{results-svm-classification}.
@@ -94,9 +96,9 @@ The goal of this classifier is to determine what pixels are part of the road and
 \subsubsection{Block size}
 Each frame is split into multiple blocks of predetermined size. We chose to vary the block sizes between 8x8px, 16x16px and 32x32px. On the one hand, larger block sizes would too easily contain multiple structures of different classes, resulting in poorer classification. For example a block on the edge of the road containing part of the street and grass. On the other hand, smaller block sizes would omit too many details to be descriptive enough to use for classification.
 
-The block size affects the level of detail taken into account while calculating the feature vector, as the values for the feature vector operate within one block size. 
+The block size affects the level of detail taken into account while calculating the feature vector, as the values for the feature vector operate within one block size. Some examples of different block sizes can be found in figure \ref{fig:methods-block-sizes}.
 
-TODO: insert photos block sizes
+TODO
 
 \subsubsection{LBP}
 With LBP we try to characterize the structure of roads within a block. The histogram of LBP values within that block can be added to the feature vector in order to improve classification. These histograms are calculated per channel (e.g. 3 channels for RGB) and are added consecutively to the feature vector. 
