@@ -125,18 +125,18 @@ void my_svm::calculateScores(Mat& extLabels, Mat& extTrainingsMat) {
 		        confusion.at<int>(0,1)++;
 		    }
 		}
-		accuracy = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows)*100;
-		precision = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(1,0))*100);
-		recall = ((double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(0,1)))*100;
-		true_negative = ((double)confusion.at<int>(1,1)/(confusion.at<int>(1,1)+confusion.at<int>(1,0)))*100;	
+		accuracy = ((double)(confusion.at<int>(0,0)+confusion.at<int>(1,1)))/((double)extTrainingsMat.rows);
+		precision = (double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(1,0));
+		recall = (double)confusion.at<int>(0,0)/(confusion.at<int>(0,0)+confusion.at<int>(0,1));
+		true_negative = (double)confusion.at<int>(1,1)/(confusion.at<int>(1,1)+confusion.at<int>(1,0));	
 		F = 2*(precision*recall)/(precision+recall);
 	}
     cout<<"Confusion matrix: "<<endl<<confusion<<endl;
-    cout<<"Precision: "<<precision<<"%"<<endl;
-    cout<<"Recall: "<<recall<<"%"<<endl;
-    cout<<"Accuracy: "<<accuracy<<"%"<<endl;
-    cout<<"True Negative Rate: "<<true_negative<<"%"<<endl;    
-    cout<<"F: "<<F<<"%"<<endl;
+    cout<<"Precision: "<<precision*100<<"%"<<endl;
+    cout<<"Recall: "<<recall*100<<"%"<<endl;
+    cout<<"Accuracy: "<<accuracy*100<<"%"<<endl;
+    cout<<"True Negative Rate: "<<true_negative*100<<"%"<<endl;    
+    cout<<"F: "<<F*100<<"%"<<endl;
 }
 
 /**
@@ -177,6 +177,9 @@ void my_svm::test(int min = 1, int max = 4, int skip = 5, int number = 5) {
                 );
             }
             imshow("output", image); // show it to the user
+            // ostringstream oss;
+            // oss<<"output_"<<ds<<"_"<<f<<"_"<<io::blkSize<<(io::useLBP?io::lbpStr:"")<<(io::useColor?io::colorStr:"")<<(io::includeMarks?io::marksStr:"")<<"_blocks";
+            // io::saveImage(oss.str(),image);
 			
 			if((keyboard=waitKey(0)) == io::KEY_ESCAPE)
 				break;

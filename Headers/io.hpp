@@ -32,17 +32,16 @@ namespace io {
     const int frameInterval = 10;
     const int frameStopIdx = 50;
     const int innerMargin = 64;
-    const int blkSize = 32; // 8,16,32
+    const int blkSize = 16; // 8,16,32
     const int lbpRadius = 1;
-    const bool includeMarks = false;
+    const bool includeMarks = true;
     const bool trainAuto = false;
     const bool useLBP = true; // Make sure to use either color, LBP or both
-    const bool useColor = true;
+    const bool useColor = false;
 
     /** SVM parameters for when not training automatically **/
     const double C = 0.1;
     const double gamma = 0.00001;
-    // const double gamma = 0.00015;
 
 	/** Shown image properties and helper values **/
 	int imX=50,imY=50

@@ -266,8 +266,19 @@ void parameterIterationTraining(bool relabel=true){
 	string fnFrameOutput = io::dirOutputLogging+"output_"+io::currentDateTime()+".csv";
 	csv.open(fnFrameOutput.c_str(),ios::out);
 
-	bool useThreeTrainingsSets = false;
-	if(useThreeTrainingsSets){
+	bool useCoupleTrainingsSets = true;
+	bool useTripletTrainingsSets = true;
+	if(useCoupleTrainingsSets){
+		for(int i=0; i<nDatasets-1; i++){
+			for(int j=i+1;j<nDatasets;j++){
+				set<int> tS;
+				tS.insert(datasets[i]);
+				tS.insert(datasets[j]);
+				trainingsSets.push_back(tS);
+			}
+		}
+	}
+	if(useTripletTrainingsSets){
 		for(int i=0; i<nDatasets-2; i++){
 			for(int j=i+1;j<nDatasets-1;j++){
 				for(int k=j+1;k<nDatasets;k++){
@@ -277,15 +288,6 @@ void parameterIterationTraining(bool relabel=true){
 					tS.insert(datasets[k]);
 					trainingsSets.push_back(tS);
 				}
-			}
-		}
-	}else{
-		for(int i=0; i<nDatasets-1; i++){
-			for(int j=i+1;j<nDatasets;j++){
-				set<int> tS;
-				tS.insert(datasets[i]);
-				tS.insert(datasets[j]);
-				trainingsSets.push_back(tS);
 			}
 		}
 	}
