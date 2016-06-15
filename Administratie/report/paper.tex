@@ -1,5 +1,6 @@
 \documentclass[runningheads,a4paper]{llncs}
 \usepackage[english]{babel}
+\usepackage{appendix}
 \usepackage{amssymb}
 \setcounter{tocdepth}{3}
 \usepackage{graphicx}
@@ -42,7 +43,7 @@ Valentin Vaerwyckweg 1, 9000, Ghent}
 \maketitle
 
 \begin{abstract}
-This is the abstract: The goal of this paper it to determine the maximum speed for a moving vehicle in traffic, using only camera images and information from the steering column. We construct a system that combines SVM classification and edge detection to foresee possible obstacles on the given trajectory of the car. The maximum speed is computed so that braking in time will avoid collision with those obstacles. 
+The goal of this paper it to determine the maximum speed for a moving vehicle in traffic, using only camera images and information from the steering column. We construct a system that combines SVM classification and edge detection to foresee possible obstacles on the given trajectory of the car. The maximum speed is computed so that braking in time will avoid collision with those obstacles. 
 TODO: hoe goed is dit systeem?
 \keywords{SVM classification, Local Binary Patterns, edge detection}
 \end{abstract}
@@ -293,6 +294,8 @@ We iterated through several parameter values (as discussed in \ref{parameters-cl
 
 Different combinations of training sets were selected of the four given datasets (training sets used are each time shown on the x-axis on the graphs). The trained classifier is then tested on the remaining datasets.
 
+All of these results for the classifier can be found in appendix \ref{appendix}.
+
 \subsubsection{Kernels}
 As previously mentioned in section \ref{methods-kernels}, there are two SVM kernels we can use for this classification problem. On average, we tend to get a nearly 10\% increase in F-scores using an RBF kernel instead of a linear kernel. It is safe to say the RBF kernel outperforms the linear kernel for this classification problem in all of our test scenarios. 
 
@@ -301,7 +304,7 @@ In general, block sizes 16x16px and 32x32px tend to show the better results. As 
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{fig/RBF_Col_wi_RM.png}
+\includegraphics[width=\textwidth]{fig/RBF-COL-wi-RM.pdf}
 \caption{F-scores for color with road marks using RBF kernel}
 \label{fig:col-wi-rm}
 \end{figure}
@@ -312,26 +315,28 @@ Therefore, in the case of our classification problem, we do not add LBP to the f
 
 The best results are found when using color histogram values for the feature vector. This implies the combinations of color values are sufficient to distinguish the road from other surroundings. A possible explanation for this phenomenon is that when asphalt and road marks are considered to be road, color is a much more consistent factor to weigh in to the classification.
 
-\textbf{TODO} grafiek wo/wi RM
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{fig/16-wi-roadmarks.pdf}
+\caption{Comparision of F-scores for 16x16px block size with road marks using RBF kernel }
+\label{fig:16_wi_roadmarks}
+\end{figure}
 
 \subsubsection{Road marks}
 Including road marks as part of the road gets better results for the classification problem.
 For our application this is more practical, because road marks should not be considered to be obstacles.
 
-Overall we can conclude that using only color with road marks shows the optimal results for our classification problem. 
+Overall we can conclude that using only color with road marks shows the optimal results for our classification problem.
 
-
-TODO figure aanpassen
-\begin{figure}[h]
+\begin{figure}
 \centering
-\includegraphics[width=\textwidth]{fig/16_wi_roadmarks.png}
-\caption{Comparision of F-scores for 16x16px block size with road marks using RBF kernel }
-\label{fig:16_wi_roadmarks}
+\includegraphics[width=\textwidth]{fig/with-vs-without-roadmarks.pdf}
+\caption{F-scores for 16x16px blocks with color using RBF kernel}
+\label{fig:col-wi-rm}
 \end{figure}
 
 Considering the results of the different scenarios, we can conclude that training on the fourth dataset results in poorer classification overall. This is because another type of road is used in this dataset, conflicting with the more common road type present in the other datasets. This distorts the classifier increases misclassifications.
 
-\textbf{TODO} check if list not f***ed up.\\
 \noindent In retrospect, the optimal parameters for our classification problem are:
 \begin{itemize}
 \item RBF kernel
@@ -386,5 +391,46 @@ In order to combine the SVM classification with the edge detection, two strategi
 \newpage
 \bibliography{Computervisie}{}
 \bibliographystyle{plain}
+
+\newpage
+\appendix
+\section{F-scores of parameter iterations}
+\label{appendix}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\textwidth]{fig/RBF-LBP-wo-RM.pdf}
+\caption{F-scores for LBP without road marks using RBF kernel}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\textwidth]{fig/RBF-COL-wo-RM.pdf}
+\caption{F-scores for color without road marks using RBF kernel}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.85\textwidth]{fig/RBF-LBP-COL-wi-RM.pdf}
+\caption{F-scores for LBP and color without road marks using RBF kernel}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.85\textwidth]{fig/RBF-LBP-wi-RM.pdf}
+\caption{F-scores for LBP with road marks using RBF kernel}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.85\textwidth]{fig/RBF-COL-wi-RM.pdf}
+\caption{F-scores for color with road marks using RBF kernel}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.85\textwidth]{fig/RBF-LBP-COL-wi-RM.pdf}
+\caption{F-scores for LBP and color with road marks using RBF kernel}
+\end{figure}
 
 \end{document}
