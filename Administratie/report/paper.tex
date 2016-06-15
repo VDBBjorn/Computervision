@@ -147,7 +147,7 @@ For each combination of the previously mentioned parameters, the SVM classifier 
 Figure \ref{fig:frame-training} shows a visualization of pre-labeled blocks in a frame.
 The classifier is trained using the label and calculated feature vector for each block in each frame of the training set.
 
-\begin{figure}[H]
+\begin{figure}[ht]
 \centering
   \centering
   \includegraphics[width=.7\textwidth]{fig/svm_training_32.png}
@@ -279,7 +279,7 @@ For the first strategy, the edges of the area classified as road are computed. T
 
 In the second strategy, the edges are first calculated using edge detection. Each edge is then checked for whether it lies on the road or not using road classification. For safety reasons there is an additional check. The above, left and right blocks of an edge should also be considered as non-road. When an edge lies on a part of the frame that is not classified as road, it is added to a collection. The intersections of the edges in the collection and the masks are then computed. 
 
-\begin{figure}[h]
+\begin{figure}[t]
   \centering
   \includegraphics[width=.9\textwidth]{fig/frame00025.png}
   \caption{Visualization of a processed frame showing both classification and edge detection}
@@ -297,7 +297,7 @@ Different combinations of training sets were selected of the four given datasets
 As previously mentioned in section \ref{methods-kernels}, there are two SVM kernels we can use for this classification problem. On average, we tend to get a nearly 10\% increase in F-scores using an RBF kernel instead of a linear kernel. It is safe to say the RBF kernel outperforms the linear kernel for this classification problem in all of our test scenarios. 
 
 \subsubsection{Block size}
-In general, block sizes 16x16px and 32x32px tend to show the better results. As an example we present the F-scores for using color feature vectors with road marks in figure \ref{fig:col-wi-rm}. Other combinations follow the same trend, although 32x32px sometimes performs slightly better. For the goal of this application, a smaller block size will be more practical (i.e. better accuracy). This is why we prefer the block size of 16x16px. 
+In general, block sizes 16x16px and 32x32px tend to show the better results. As an example we present the F-scores for using color feature vectors with road marks in figure \ref{fig:col-wi-rm}. Other combinations follow the same trend, although 32x32px sometimes performs slightly better. This is why we conclude the block size of 32x32px to be a more reliable choice. 
 
 \begin{figure}
 \centering
@@ -306,23 +306,22 @@ In general, block sizes 16x16px and 32x32px tend to show the better results. As 
 \label{fig:col-wi-rm}
 \end{figure}
 
-\subsubsection{LBP}
-The use of LBP is crucial to our implementation in order to get a viable classifier for road detection. If we compare results (block size 16x16px) of feature vectors on LBP only to the combination of LBP and color, we get different results depending on whether or not we include road marks. 
+\subsubsection{Feature vector values}
+The use of LBP represents no significant gains in order to get a viable classifier for road detection. If we compare results (block size 32x32px) of feature vectors on color only to the combination of LBP and color,  performance remains roughly the same.
+Therefore, in the case of our classification problem, we do not add LBP to the feature vector.
 
-If we do not include road marks in the training data, we get slightly better results when combining LBP and color for the feature vectors, as shown in figure \ref{fig:16_wo_roadmarks}.
-If on the other hand we do include these road marks, using only LBP shows equal or better results than the combination of LBP and color, as shown in figure \ref{fig:16_wi_roadmarks}. 
+The best results are found when using color histogram values for the feature vector. This implies the combinations of color values are sufficient to distinguish the road from other surroundings. A possible explanation for this phenomenon is that when asphalt and road marks are considered to be road, color is a much more consistent factor to weigh in to the classification.
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=\textwidth]{fig/16_wo_roadmarks.png}
-\caption{Comparision of F-scores for 16x16px block size without road marks using RBF kernel }
-\label{fig:16_wo_roadmarks}
-\end{figure}
+\textbf{TODO} grafiek wo/wi RM
 
-A possible explanation for this phenomenon is that when only asphalt is considered to be road, color is a much more consistent factor to weigh in to the classification. However when including road marks as part of the road, color intensity is no longer an added value and even tends to mislead the classifier. 
+\subsubsection{Road marks}
+Including road marks as part of the road gets better results for the classification problem.
+For our application this is more practical, because road marks should not be considered to be obstacles.
 
-Overall we can conclude that using only LBP with road marks shows the optimal results for our classification problem. 
+Overall we can conclude that using only color with road marks shows the optimal results for our classification problem. 
 
+
+TODO figure aanpassen
 \begin{figure}[h]
 \centering
 \includegraphics[width=\textwidth]{fig/16_wi_roadmarks.png}
@@ -336,8 +335,8 @@ Considering the results of the different scenarios, we can conclude that trainin
 \noindent In retrospect, the optimal parameters for our classification problem are:
 \begin{itemize}
 \item RBF kernel
-\item Block size 16x16px
-\item Using only LBP histogram values for the feature vectors
+\item Block size 32x32px
+\item Using only color histogram values for the feature vectors
 \item Including road marks as part of the road  
 \end{itemize}
 
@@ -357,7 +356,7 @@ The second strategy for combination also results in zero crashes over the four d
 
 As an extra, this strategy is also able to cope better with zebra crossings than the first strategy. This is shown in figure \ref{zebra}. In the first figure (\ref{zebra-1}) TODO
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \begin{subfigure}[t]{.5\textwidth}
   \centering
@@ -375,6 +374,15 @@ As an extra, this strategy is also able to cope better with zebra crossings than
 \end{figure}
 
 \section{Conclusion}
+In this paper we combined SVM classification with edge detection in order to calculate the maximum speed a vehicle can drive, considering possible obstacles on the given trajectory.
+
+The SVM classification shows optimal results when using color histogram values for the feature vector. These feature vectors are calculated for each block of 32x32px in an image.
+These results tend to get better when we include road marks as part of the road in the training data. This is also optimal for use in our application as we don't want to detect road marks as obstacles.
+
+To perform edge detection, the frame is first treated with morphological processing operations to remove insignificant details. In our application we used Canny Edge Detection to detect the side of the road and possible obstacles.
+
+In order to combine the SVM classification with the edge detection, two strategies were proposed. The first strategy simply intersects the SVM classification results and edges to detect the nearest obstacle in the trajectory. This method show to be the safe option, by often falsely detecting an obstacle.  Results show that the best strategy is to first detect all the edges and then classify these edges as being part of the road or not, using the SVM classifier. Only edges which are not considered part of the road remain. The maximum speed is then calculated based on the nearest edge in the trajectory of the car.
+
 \newpage
 \bibliography{Computervisie}{}
 \bibliographystyle{plain}
