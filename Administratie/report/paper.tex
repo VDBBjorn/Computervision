@@ -362,9 +362,11 @@ The first way of combining the two methods is very safe and thus results in no c
 The second strategy for combination also results in zero crashes over the four datasets. This strategy tries to focus on edge detection. A region is considered road if there are no edges. When there are edges, road classification is used to decide whether it's road or not. This strategy gave us the best results, as shown in figure \ref{distance_result} as the fourth bar.
 \begin{figure}[ht]
 	\centering
-	\includegraphics[width=\textwidth]{fig/distance_result.png}
+	\includegraphics[width=\textwidth]{fig/distance_result}
 	\caption{Results of road classification, edge detection and combinations.\label{distance_result}}
 \end{figure}
+
+
 
 As an extra, this strategy is also able to cope better with zebra crossings than the first strategy. This is shown in figure \ref{zebra}. In the first figure (\ref{zebra-1}) TODO
 
