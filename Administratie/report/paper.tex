@@ -180,7 +180,7 @@ Detecting edges is very straightforward using an edge detection algorithm like C
 \caption{Perform eroding to remove the edges on the road.}
 \end{figure}
 
-Eroding is a morphology operator to make the objects on the foreground, which are the brightest, smaller \cite{erode_dilate}. Figure \ref{line_zoom_eroded} shows an example of a thinned white line. When the kernel is large enough, white lines can be filtered out completely. The same technique is used to smooth the surface of cobbled roads. A cobblestone consist of a bright center, surrounded by darker joints. By eroding the cobbled road, the erode function will minimize the center of the cobble, which will cause enlarged joints. With a large kernel, the joints will spread until they overlap. The best results were achieved with an ellipsoidal kernel of 100 x 30 px.
+Eroding is a morphology operator to make the objects on the foreground, which are the brightest, smaller \cite{sreedhar2012enhancement}. Figure \ref{line_zoom_eroded} shows an example of a thinned white line. When the kernel is large enough, white lines can be filtered out completely. The same technique is used to smooth the surface of cobbled roads. A cobblestone consist of a bright center, surrounded by darker joints. By eroding the cobbled road, the erode function will minimize the center of the cobble, which will cause enlarged joints. With a large kernel, the joints will spread until they overlap. The best results were achieved with an ellipsoidal kernel of 100 x 30 px.
 
 \begin{figure}[ht]
 	\begin{minipage}[t]{.45\textwidth}
