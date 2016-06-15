@@ -34,10 +34,10 @@ namespace io {
     const int innerMargin = 64;
     const int blkSize = 16; // 8,16,32
     const int lbpRadius = 1;
-    const bool includeMarks = true;
+    const bool includeMarks = false;
     const bool trainAuto = false;
     const bool useLBP = true; // Make sure to use either color, LBP or both
-    const bool useColor = false;
+    const bool useColor = true;
 
     /** SVM parameters for when not training automatically **/
     const double C = 0.1;
@@ -216,7 +216,7 @@ namespace io {
 	    string fnLbl = dirOutput+frameName+labelsPostfix;
 	    string fnFv = dirOutput+frameName+(useLBP?lbpStr:"")+(useColor?colorStr:"")+featVecsPostfix;
 	    if(file_exists(fnLbl) && file_exists(fnFv)) {
-			cout<<"Reading trainingsdata from output of frame "<<frameName<<endl;
+			cout<<"Reading trainingsdata from "<<fnFv<<endl;
 		 	ifstream ifsLbl(fnLbl.c_str());
 		 	ifstream ifsFv(fnFv.c_str());
 

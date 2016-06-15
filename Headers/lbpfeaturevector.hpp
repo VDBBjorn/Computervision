@@ -176,6 +176,8 @@ public:
 	* along with a copy of the frame with the blocks drawn on top of it.
 	*/
 	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool useColor=io::useColor, bool useLBP=io::useLBP, bool isTrainingsdata=false){
+	// void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool useColor=true, bool useLBP=true, bool isTrainingsdata=false){
+
     	cout<<"Start processFrame "<<fnFrame+(useLBP?io::lbpStr:"")+(useColor?io::colorStr:"")<<endl;
     	if(!useColor && !useLBP){
     		cerr<<"You are using neither color or LBP for featurvectors, aka nothing!"<<endl;
@@ -193,13 +195,6 @@ public:
 
 		int imWidth=img.cols;
 		int imHeight=img.rows;
-
-		// io::checkDir(io::dirOutput);
-		// size_t pos1 = fnFrame.find_last_of("/")+1;
-		// if(pos1 == string::npos) pos1=0;
-		// size_t pos2 = fnFrame.find_last_of(".");
-		// if(pos2 == string::npos) pos2=fnFrame.size();
-		// string frameName = fnFrame.substr(pos1,pos2-pos1); // Remove folder prefixes and file extension
 
 
 		// Number of blocks in width and height

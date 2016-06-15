@@ -66,10 +66,11 @@ bool isRoad(vector<int> & roadRegions, int blksInWidth, int frameRows, int frame
     }
 }
 
-void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds, string dirOutputFrames) {
+void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds, string dirOutputFrames, string& results) {
     int crash = 0;
 
     int thresh = 255;
+    stringstream ssOut;
     for(int i = 0; i<masks.size(); i++) {
         Mat col = cv::Mat::ones(roads[i].rows, 1, roads[i].type());
         Mat rows = cv::Mat::ones(masks[i].rows-roads[i].rows, masks[i].cols, roads[i].type());
@@ -252,20 +253,21 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         //print result
         //cout << "FRAME " << i << ": " << laagsteSnelheid << " (" << speeds[i] << ") -> " << laagsteSnelheid-speeds[i] << endl;
 
-        stringstream ss2;
-        ss2 << setfill('0') << std::setw(5) << i << " " << laagsteSnelheid;
-        cout << ss2.str() << endl;
+        ssOut << setfill('0') << std::setw(5) << i << " " << laagsteSnelheid <<endl;
 
         /// Show in a window
         /*namedWindow( "Max Speed", CV_WINDOW_AUTOSIZE );
         imshow( "Max Speed", dst );
         waitKey(0);*/
         io::checkDir(dirOutputFrames);
-        stringstream ssOut;
-        ssOut << dirOutputFrames << "/frame" << setfill('0') << std::setw(5) << i << ".png";
-        imwrite(ssOut.str(),dst);
+        stringstream ssFilename;
+        ssFilename << dirOutputFrames << "/frame" << setfill('0') << std::setw(5) << i << ".png";
+        imwrite(ssFilename.str(),dst);
     }
-    cout << "CRASHES: " << crash << endl;
+    ssOut << "CRASHES: " << crash << endl;
+
+    results = ssOut.str();
+    cout<<results<<endl;
 }
 
 vector<Mat> detectLines(vector<Mat> & masks, vector<Mat> & frames){
@@ -321,6 +323,7 @@ int main(int argc, char** argv){
         return 1;
     }
     string dirDataset(argv[1]);
+    string results;
     
     vector<double> speeds;
     string line;
@@ -357,7 +360,12 @@ int main(int argc, char** argv){
     io::checkDir(dirOutputFrames);
     system(string("exec rm -r "+dirOutputFrames+"/*").c_str());
 
-    showMaxSpeed(masks,roads,frames,roadRegions,speeds,dirOutputFrames);
+    showMaxSpeed(masks,roads,frames,roadRegions,speeds,dirOutputFrames,results);
+
+    ofstream osResults;
+    osResults.open(string(dirDataset+"/results.txt").c_str(),ios::out);
+    osResults<<results<<endl;
+    osResults.close();
     
     //waitKey(0);
     destroyAllWindows();

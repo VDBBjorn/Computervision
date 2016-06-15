@@ -232,7 +232,7 @@ void parameterIterationTraining(bool relabel=true){
 		    Mat featureVectors;
 
 		    io::buildFrameName(buffer,frameName,dataset,fIdx,innerMargin,blkSize,includeMarks);
-		    fv.processFrame(frameName,frame,featureVectors,useLBP,useColor,true);
+		    fv.processFrame(frameName,frame,featureVectors,useColor,useLBP,true);
 
 		    vector<bool> isRoad;
 		    generateLabels(frameName,isRoad,featureVectors.rows);
@@ -339,35 +339,8 @@ void parameterIterationTraining(bool relabel=true){
 	csv.close();
 }
 
-void fullTraining(bool relabel=false){
- //    LbpFeatureVector fv(io::outerMargin,io::innerMargin);
-
-	// vector<Mat> frames;
-	// string frameRegex = "frame%05d.png";
-	// for(int s=0; s<sizeof(io::datasetFolders)/sizeof(string); s++) {
-	// 	io::readImages(io::datasetFolders[s],frameRegex,frames);
-	// 	for(int i=0;i<frames.size();i+=5){
-	// 		char buffer[30];
-	// 		sprintf(buffer,("%02d"+frameRegex).c_str(),s+1,i);
-	// 		string fnFrame = string(buffer);
-	// 		Mat featureVectors;
-	// 		fv.processFrame(fnFrame,frames[i],featureVectors,true,true,true);
-
-	// 		string frameName;
-	// 		fileToFrameName(fnFrame,frameName);
-
-	// 		vector<bool> isRoad;
-	// 		generateLabels(frameName,isRoad,featureVectors.rows);
-	// 		if(relabel)	guiLabeling(fv,frames[i],isRoad);
-
-	// 		saveFrameOutput(frameName,frames[i],featureVectors,isRoad);
-	// 	}
-	// }
-}
-
 int main (int argc, char** argv){
 	parameterIterationTraining();
-	// fullTraining();
 
     return 0;
 }
