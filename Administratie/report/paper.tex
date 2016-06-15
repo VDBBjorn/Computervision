@@ -36,24 +36,21 @@
 \institute{Ghent University, Faculty of Engineering and Architecture\\
 Valentin Vaerwyckweg 1, 9000, Ghent}
 
-%
-% NB: a more complex sample for affiliations and the mapping to the
-% corresponding authors can be found in the file "llncs.dem"
-% (search for the string "\mainmatter" where a contribution starts).
-% "llncs.dem" accompanies the document class "llncs.cls".
-%
-
 \maketitle
-
 
 \begin{abstract}
 This is the abstract: TODO
-\keywords{SVM classification, Local Binary Patterns, line detection}
+\keywords{SVM classification, Local Binary Patterns, edge detection}
 \end{abstract}
 
 
 \section{Introduction}
-TODO
+In recent years, a lot of advanced electronics have been used to help automate driving. It is already common for some cars to have (semi-)automated parking \cite{Pohl2006} and adaptive cruise control \cite{Jurgen}. Also, a lot of safety features are being developed to increase environmental awareness of cars: pedestrian detection \cite{Gavrila2000}, automated detection of speed limit signs \cite{Torresen2004}, etc. 
+
+A feature that could be realized using the electronics that are already available in some cars, is automated maximum speed detection. This speed detection would simulate the braking distance towards the nearest obstacle and inform the user. There are various ways to achieve this. Commonly used systems in adaptive cruise control are lidar and radar.  The choice of sensor presents classic design tradeoffs \cite{Jones2001}.  Lidar  is  less  expensive  to  produce  and  easier  to package  but  performs  poorly  in  rain  and  snow. Another problem is that accumulations of mud, dust or snow on the car
+can block lidar beams. Radar-based  systems,  on  the  other  hand,  can ''see'' at least 150 meters ahead in fog or rain heavy enough to cut the driver’s ability to see down to 10  meters  or  less. 
+
+Because of the problems with both this systems, we propose to use a detection system based on camera images. These images present a few advantages over a system using lidar or radar. First of all cameras are way cheaper to install. On top of that they see color (whereas lidar only sees gray scale in the infrared spectrum) and are able to gain very high resolution for more distant objects. There are several downsides to using cameras. They need light to work properly. This becomes a problem at night, because cameras can only rely on the headlights of the car. Secondly computer vision systems using camera images can use a lot op CPU power. TODO
 
 \section{Background}
 \subsection{Texture analysis using Local Binary Patterns}
@@ -100,12 +97,9 @@ One method for comparing results for a set of parameter values is cross-validati
 \subsection{Precision, recall, F-scores}
 TODO: Bjorn
 
-\subsection{Line detection}
-TODO: Mathias
-
 
 \section{Method}
-In order to determine the maximum speed of a vehicle two image processing techniques are used: SVM classification and edge detection. In order to combine the best of both techniques, two strategies are discussed in section \ref{method-combination}.
+In order to determine the maximum speed of a vehicle, two image processing techniques are used: SVM classification and edge detection. To combine the best of both techniques, two strategies are discussed in section \ref{method-combination}.
 
 For the implementation of our method, we use OpenCV 3.1 \cite{Bradski2000} and C++. Four different datasets were used to either train or test the solution.
 
@@ -142,10 +136,10 @@ Because working with LBP values only doesn't take color intensity into account \
 
 \subsection{Kernels for SVM classification}\label{methods-kernels}
 Judging from the OpenCV documentation\footnote{http://docs.opencv.org/3.1.0/} there are two SVM kernels fit for a two-class classification problem.
-A linear kernel is faster, but the RBF kernel will outperform the linear kernel in case the data is not linearly separable. We tested and compared the results using each kernel to decide which is best fit for our classification problem.
+A linear kernel is faster, but the RBF kernel will outperform the linear kernel in case the data is not linearly separable. We tested and compared the results using each kernel to decide which is the best fit for our classification problem.
 
 \subsection{Training the SVM classifier}
-For each combination of the previously mentioned parameters, the SVM classifier must be trained. For a training set (a subset of the datasets available) each frame is divided into blocks. Each block must be manually labelled with the expected value for classification. For practical reasons we put a margin between each block in the frames of the training set and only used the $i$-th frame of each dataset (i=0,10,...,40).
+For each combination of the previously mentioned parameters, the SVM classifier must be trained. For a training set (a subset of the datasets available) each frame is divided into blocks. Each block must be manually labeled with the expected value for classification. For practical reasons we put a margin between each block in the frames of the training set and only used the $i$-th frame of each dataset ($i=0,10,...,40$).
 Figure \ref{fig:frame-training} shows a visualization of pre-labeled blocks in a frame.
 The classifier is trained using the label and calculated feature vector for each block in each frame of the training set.
 
@@ -158,7 +152,7 @@ The classifier is trained using the label and calculated feature vector for each
 \end{figure}
 
 \subsection{Road marks}
-The training dataset was labelled considering blocks containing road marks once as part of the road class and once as part of the non-road class. Initially road marks were labelled as non-road, in order to get a good classification of road (i.e. different types of asphalt). As these road marks aren't really considered an obstacle for a car driver, ideally they should be classified as road. This makes up for a more difficult classification problem. To quantify this effect we apply classification both with and without road marks. 
+The training dataset was labeled twice, once considering blocks containing road marks as part of the road class and once as part of the non-road class. Initially road marks were labeled as non-road, in order to get a good classification of road (i.e. different types of asphalt). But as these road marks aren't really considered an obstacle for a car driver, ideally they should be classified as road. This makes up for a more difficult classification problem. To quantify this effect we apply classification both with and without road marks. 
 
 \subsection{Removing details}
 
@@ -267,7 +261,7 @@ The minimum threshold is determined by the required minimum sensitivity. When th
 
 \subsection{Combination of classification and edge detection}\label{method-combination}
 
-In order to calculate the maximum speed a vehicle can have in a particular frame, we use a combination of road classification and edge detection. Like that, we can detect where it is safe to drive. For each frame in the dataset, some masks are given that show the projected trajectory of the car in that particular frame. Intersections between this mask and the ''safe zone'' in the frame get calculated in order to find the maximum safe speed for each frame. The edges of the edge detection are visualized as blue lines on figure \ref{visualization}. The intersections are shown in green. The closest intersection to the car is shown in red. At this point the maximum speed is derived from the intensity of this pixel. 
+In order to calculate the maximum speed a vehicle can have in a particular frame, we use a combination of road classification and edge detection. Like that, we can detect where it is safe to drive. For each frame in the dataset, a mask is given that shows the projected trajectory of the car in that frame. Intersections between this mask and the ''safe zone'' in the frame get calculated in order to find the maximum safe speed for each frame. The edges of the edge detection are visualized as blue lines on figure \ref{visualization}. The intersections are shown in green. The closest intersection to the car is shown in red. At this point the maximum speed is derived from the intensity of this pixel. 
 
 In order to calculate the edges, two different strategies were tested:
 \begin{enumerate}
@@ -279,7 +273,7 @@ Both strategies start by removing outliers from the road classification. The goa
 
 For the first strategy, the edges of the area classified as road are computed. These get combined with the edges from the edge detection. The closest intersection of any edge with the given mask of the image is used to calculate the maximum speed of the vehicle. 
 
-In the second strategy, the edges are first calculated using edge detection. Each edge is then checked whether it lies on the road or not using road classification. For safety reasons there is an additional check. The above, left and right blocks of an edge should also be considered as non-road. When an edge lies on a part of the frame that is not classified as road, it is added to a collection. The intersections of the edges in the collection and the masks are then computed. 
+In the second strategy, the edges are first calculated using edge detection. Each edge is then checked for whether it lies on the road or not using road classification. For safety reasons there is an additional check. The above, left and right blocks of an edge should also be considered as non-road. When an edge lies on a part of the frame that is not classified as road, it is added to a collection. The intersections of the edges in the collection and the masks are then computed. 
 
 \begin{figure}[t]
   \centering
@@ -293,13 +287,13 @@ In the second strategy, the edges are first calculated using edge detection. Eac
 \subsection{SVM classification}\label{results-svm-classification}
 We iterated through several parameter values (as discussed in \ref{parameters-classification}) to find optimal classification for road detection. For each combination of parameters we train and test on different combinations of datasets. For each combination we calculate the F-scores. These scores are used to compare the classification results (higher F-scores indicate better classification). 
 
-Of the four datasets, different combinations of training sets were selected (each time shown as x-axis on the graphs). The trained classifier was then tested on the remaining datasets.
+Different combinations of training sets were selected of the four given datasets (training sets are each time shown on the x-axis on the graphs). The trained classifier is then tested on the remaining datasets.
 
 \subsubsection{Kernels}
 As previously mentioned in section \ref{methods-kernels}, there are two SVM kernels we can use for this classification problem. On average, we tend to get a nearly 11\% increase in F-scores using RBF kernel instead of linear kernel. It is safe to say the RBF kernel outperforms the linear kernel for this classification problem in all of our test scenarios. 
 
 \subsubsection{Block size}
-In general, block sizes 16x16px and 32x32px tend to show the better results. As an example we present the F-scores for LBP and color with road marks in figure \ref{fig:lbp-col-wi-rm}. Other combinations follow the same trend. For the goal of this application, a smaller block size will be more practical (i.e. better accuracy). This is why prefer the block size of 16x16px. 
+In general, block sizes 16x16px and 32x32px tend to show the better results. As an example we present the F-scores for LBP and color with road marks in figure \ref{fig:lbp-col-wi-rm}. Other combinations follow the same trend. For the goal of this application, a smaller block size will be more practical (i.e. better accuracy). This is why we prefer the block size of 16x16px. 
 
 \begin{figure}
 \centering
@@ -311,8 +305,8 @@ In general, block sizes 16x16px and 32x32px tend to show the better results. As 
 \subsubsection{LBP}
 The use of LBP is crucial to our implementation in order to get a viable classifier for road detection. If we compare results (block size 16x16px) of feature vectors on LBP only to the combination of LBP and color, we get different results depending on whether or not we include road marks. 
 
-If we do not include road marks in the training data, we get slightly better results when combining LBP and color for the feature vectors (as shown in figure \ref{fig:16_wo_roadmarks}).
-If on the other hand we do include these road marks, using only LBP shows equal or better results than the combination of LBP and color (as shown in figure \ref{fig:16_wi_roadmarks}). 
+If we do not include road marks in the training data, we get slightly better results when combining LBP and color for the feature vectors, as shown in figure \ref{fig:16_wo_roadmarks}.
+If on the other hand we do include these road marks, using only LBP shows equal or better results than the combination of LBP and color, as shown in figure \ref{fig:16_wi_roadmarks}. 
 
 \begin{figure}[h]
 \centering
@@ -332,7 +326,7 @@ Overall we can conclude that using only LBP with road marks shows the optimal re
 \label{fig:16_wi_roadmarks}
 \end{figure}
 
-Considering the results of the different scenarios, we can conclude that training on dataset four results in poorer classification overall. This is because another type of road is used in this dataset, conflicting with the more common road type present in the other datasets. This distorts the classifier increases misclassifications.
+Considering the results of the different scenarios, we can conclude that training on the fourth dataset results in poorer classification overall. This is because another type of road is used in this dataset, conflicting with the more common road type present in the other datasets. This distorts the classifier increases misclassifications.
 
 \textbf{TODO} check if list not f***ed up.\\
 \noindent In retrospect, the optimal parameters for our classification problem are:
@@ -346,7 +340,7 @@ Considering the results of the different scenarios, we can conclude that trainin
 \subsection{Driving results}
 Driving results get evaluated using a script that calculates the distance a vehicle can drive in one minute, based on the given speed by our system. This script includes a ''ground truth'' for each frame in each dataset. If our speeds exceed this ground truth, the vehicle crashes and is not able to continue driving.
 
-In section \ref{method-combination} two strategies were presented. These use a combination of classification and edge detection. First, the evaluation was run separately on these two methods. The results are shown in figure \ref{distance_result}. The first bar of the histogram shows for every dataset the performance of road classification. Because of a crash in the first dataset there can only be traveled 317m (out of the 1350m). The second bar shows for each dataset the distance traveled only relying on edge detection. There are no crashes in the four datasets so we can say these results are way better. This makes us believe the second combination strategy will be the better one, as it relies.
+In section \ref{method-combination} two strategies were presented. These use a combination of both classification and edge detection. First, the evaluation was run separately on these two methods. The results are shown in figure \ref{distance_result}. The first bar of the histogram shows for every dataset the performance of road classification. Because of a crash in the first dataset there can only be traveled 317 meters (out of the total 1350 meters in this dataset). The second bar shows the distance traveled only relying on edge detection for each dataset. There are no crashes in the four datasets so we can say these results are way better than the ones only using classification. This makes us believe the combination strategy that relies more on edge detection (strategy 2) will be the better one.
 
 The first way of combining the two methods is very safe and thus results in no crashes over the four datasets. A region is considered to be road only if it's identified as road by the road classification and if there are no edges. Both classification and edge detection should indicate a pixel as road in order to be used for safe driving. The performance of this combination is shown in the third bar of figure \ref{distance_result}. As said, this strategy is very safe, giving up a lot of traveled distance in favor of safety. 
 
