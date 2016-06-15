@@ -248,13 +248,15 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         if(laagsteSnelheid!= 90)
             laagsteSnelheid -=1;
         
-        stringstream ss;
-        ss << "Max speed (zelf): " << laagsteSnelheid << " km/u, gtdistances: " << speeds[i] << " km/u";
-        if(laagsteSnelheid <= speeds[i])
-            putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,255,0 ), 3);
-        else{
-            putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,0,255 ), 3);
-            crash++;
+        if(speeds.size()>0){
+            stringstream ss;
+            ss << "Max speed (zelf): " << laagsteSnelheid << " km/u, gtdistances: " << speeds[i] << " km/u";
+            if(laagsteSnelheid <= speeds[i])
+                putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,255,0 ), 3);
+            else{
+                putText(dst, ss.str() , Point(10,30), 0, 1.0, Scalar( 0,0,255 ), 3);
+                crash++;
+            }
         }
 
 
@@ -272,7 +274,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         ssFilename << dirOutputFrames << "/frame" << setfill('0') << std::setw(5) << i << ".png";
         imwrite(ssFilename.str(),dst);
     }
-    ssOut << "CRASHES: " << crash << endl;
+    // ssOut << "CRASHES: " << crash << endl;
 
     results = ssOut.str();
     cout<<results<<endl;
