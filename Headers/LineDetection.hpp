@@ -22,13 +22,8 @@ public:
 
     Mat getLinesFromImage(Mat &image, bool showSteps) {
 
-
-        // Filter hough detected lines by angle
-        int minAngle = 20;
-        int maxAngle = 80;
-
         // parameters
-        int cannyLowerThreshold = 40; // 40
+        int cannyLowerThreshold = 45; // 40
         int cannyUpperThreshold = cannyLowerThreshold * 2;
         int houghPMinLineLength = 7;
         int houghPGap = 10;
