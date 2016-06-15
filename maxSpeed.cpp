@@ -46,11 +46,21 @@ bool isRoad(vector<int> & roadRegions, int blksInWidth, int frameRows, int frame
 
     // most left and right column are never considered as road, in order to limit the speed when
     // reaching the edge of the frame (i.e. necessary on the roundabout in Dataset 01)
-    if(x < io::blkSize || x >= frameCols - io::blkSize) return false;
+    if(x < io::blkSize * 2 || x >= frameCols - (io::blkSize * 2)) return false;
 
     // the lowest row is always considered as road
     if(y >= frameRows - io::blkSize) return true;
 
+    for(int k = -2; k <= 2; k++) {
+        if(
+            roadRegions[j-(blksInWidth * 2)+k] != 1 ||
+            roadRegions[j-blksInWidth+k] != 1 ||
+            roadRegions[j+k] != 1
+        ) return false;
+    }
+
+    return true;
+/*
     if(
         roadRegions[j] == 1 &&
         // above
@@ -58,12 +68,10 @@ bool isRoad(vector<int> & roadRegions, int blksInWidth, int frameRows, int frame
         roadRegions[j-blksInWidth] == 1 &&
         roadRegions[j-blksInWidth+1] == 1 &&
 
-        // left & right
-        roadRegions[j-1] == 1 &&
-        roadRegions[j+1] == 1
+
     ) {
         return true;
-    }
+    }*/
 }
 
 void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds, string dirOutputFrames, string& results) {
@@ -341,8 +349,16 @@ int main(int argc, char** argv){
         iss >> speed;
         speeds.push_back(speed);
     }
-    vector<Mat> masks = read_images(dirDataset,"mask%05d.png");
-    vector<Mat> frames = read_images(dirDataset,"frame%05d.png");
+    vector<Mat> masks_all = read_images(dirDataset,"mask%05d.png");
+    vector<Mat> frames_all = read_images(dirDataset,"frame%05d.png");
+
+    vector<Mat> masks;
+    vector<Mat> frames;
+    for(int i=0; i < 30; i++) {
+        masks.push_back(masks_all[i]);
+        frames.push_back(frames_all[i]);
+    }
+
 
     vector<Mat> roads = detectLines(masks,frames);
     cout << "lines done"<< endl;
