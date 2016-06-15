@@ -270,7 +270,40 @@ The minimum threshold is determined by the required minimum sensitivity. When th
 
 \subsection{Combination of classification and edge detection}
 
-To combine road classification and edge detection we should first look at the performance of these two methods separately. Therefore, the evaluation was run on each of these two methods. The result is shown in figure \ref{distance_result}. The first bar of the histogram shows for every dataset the performance of road classification. Because of a crash in the first dataset there can only be travelled 317m. The second bar shows for each dataset the distance travelled only relying on edge detection. There are no crashes in the four datasets so the results are better. A first and very safe way to combine these two methods is the following. A region is considered road only if it's identified as road by the road classification and there is no edge. The performance of this combination is shown in the third bar. As said this is very safe, therefore the travelled distance is lower than only applying edge detection. An other way to make a combination, witch still results in zero crashes is to focus on edge detection. A region is considered road if there are no edges. When there are edges, road classification is used to decide whether it's road. This strategy gave us the best results and are shown as the fourth bar.\begin{figure}[ht]	\centering	\includegraphics[width=\textwidth]{fig/distance_result.png}	\caption{Results of road classification, edge detection and combinations.\label{distance_result}}\end{figure}This last combination based on edge detection is able to cope with zebra crossings. This is shown in figure \ref{zebra}. In the first one the road markings are small because the car is far enough. Edge detection is therefore able to filter out these markings. In the next frame the markings are closer to the care and are too large to be filtered out. Because the road classification suggests the markings are road, they are considered road.\begin{figure}[ht]\centering\begin{subfigure}{.5\textwidth}  \centering  \includegraphics[width=.9\textwidth]{fig/zebra_edge_filtered.png}  \caption{Zebra crossing filtered out by edge detection.}\end{subfigure}%\begin{subfigure}{.5\textwidth}  \centering  \includegraphics[width=.9\textwidth]{fig/zebra_road_filtered.png}  \caption{Zebra crossing classified as road.}\end{subfigure}\caption{Zebra crossing\label{zebra}}\end{figure}The combination of road classification and edge detection starts with removing outliers from the road classification. The goal of this is to eliminate the effect an outlier would have when it's close to the car. A non-road block is considered an outlier when it has less than 4 non-road block neighbours. This is repeated until we become a stable condition without outliers. Next, the edges are checked if they aren't on the road. This is done by checking that an edge is on a non-road block of the road classification. For safety reasons there is an additional check. The above, left and right blocks of an edge should also be considered as non-road. When the edge is not classified on the road, it is added to a collection. The intersections of the edges in the collection and the masks are computed. For each frame the masks give the projected trajectory of the car. The edges are visualised as blue lines on figure \ref{zebra}. The intersections are shown green. The closest intersection to the car is shown in red. At this point the maximum speed is derived from the intensity. 
+To combine road classification and edge detection we should first look at the performance of these two methods separately. Therefore, the evaluation was run on each of these two methods. The result is shown in figure \ref{distance_result}. The first bar of the histogram shows for every dataset the performance of road classification. Because of a crash in the first dataset there can only be travelled 317m. The second bar shows for each dataset the distance travelled only relying on edge detection. There are no crashes in the four datasets so the results are better. 
+
+A first and very safe way to combine these two methods is the following. A region is considered road only if it's identified as road by the road classification and there is no edge. The performance of this combination is shown in the third bar. As said this is very safe, therefore the travelled distance is lower than only applying edge detection. 
+
+An other way to make a combination, witch still results in zero crashes is to focus on edge detection. A region is considered road if there are no edges. When there are edges, road classification is used to decide whether it's road. This strategy gave us the best results and are shown as the fourth bar.
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=\textwidth]{fig/distance_result.png}
+	\caption{Results of road classification, edge detection and combinations.\label{distance_result}}
+\end{figure}
+
+This last combination based on edge detection is able to cope with zebra crossings. This is shown in figure \ref{zebra}. In the first one the road markings are small because the car is far enough. Edge detection is therefore able to filter out these markings. In the next frame the markings are closer to the care and are too large to be filtered out. Because the road classification suggests the markings are road, they are considered road.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}[t]{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\textwidth]{fig/zebra_edge_filtered.png}
+  \caption{Zebra crossing filtered out by edge detection.}
+\end{subfigure}%
+\begin{subfigure}[t]{.5\textwidth}
+  \centering
+  \includegraphics[width=.9\textwidth]{fig/zebra_road_filtered.png}
+  \caption{Zebra crossing classified as road.}
+\end{subfigure}
+\caption{Zebra crossing\label{zebra}}
+\end{figure}
+
+The combination of road classification and edge detection starts with removing outliers from the road classification. The goal of this is to eliminate the effect an outlier would have when it's close to the car. A non-road block is considered an outlier when it has less than 4 non-road block neighbours. This is repeated until we become a stable condition without outliers. 
+Next, the edges are checked if they aren't on the road. This is done by checking that an edge is on a non-road block of the road classification. For safety reasons there is an additional check. The above, left and right blocks of an edge should also be considered as non-road. 
+
+When the edge is not classified on the road, it is added to a collection. The intersections of the edges in the collection and the masks are computed. For each frame the masks give the projected trajectory of the car. 
+The edges are visualised as blue lines on figure \ref{zebra}. The intersections are shown green. The closest intersection to the car is shown in red. At this point the maximum speed is derived from the intensity. 
+
 \section{Results}
 
 \subsection{SVM classification}\label{results-svm-classification}
