@@ -266,7 +266,7 @@ The minimum threshold is determined by the required minimum sensitivity. When th
 
 \subsection{Combination of classification and edge detection}\label{method-combination}
 
-In order to calculate the maximum speed a vehicle can have in a particular frame, we use a combination of road classification and edge detection. Like that, we can detect where it is safe to drive. For each frame in the dataset, a mask is given that shows the projected trajectory of the car in that frame. Intersections between this mask and the ''safe zone'' in the frame get calculated in order to find the maximum safe speed for each frame. The edges of the edge detection are visualized as blue lines on figure \ref{visualization}. The intersections are shown in green. The closest intersection to the car is shown in red. At this point the maximum speed is derived from the intensity of this pixel. 
+In order to calculate the maximum speed a vehicle can have in a particular frame, we use a combination of road classification and edge detection. Like that, we can detect where it is safe to drive. For each frame in the dataset, a mask is given that shows the projected trajectory of the car in that frame. They are used to derive the maximum speed to be able to brake safely without hitting an object. When an object is detected at a certain point on the mask, the intensity at that point gives the maximum safe driving speed. The edges of the edge detection are visualized as blue lines on figure \ref{visualization}. The intersections are shown in green. The closest intersection to the car is shown in red. At this point the maximum speed is derived from the intensity of this pixel. 
 
 In order to calculate the edges, two different strategies were tested:
 \begin{enumerate}
@@ -274,11 +274,9 @@ In order to calculate the edges, two different strategies were tested:
 \item A region is considered to be road if there are no edges. When edges are detected, road classification is used to decide what part of the image is road. 
 \end{enumerate} 
 
-Both strategies start by removing outliers from the road classification. The goal of this is to eliminate the effect that outliers would have when it's close to the car. A non-road block is considered an outlier when it has less than 4 non-road neighbors. This is repeated until all outliers are removed.
-
 For the first strategy, the edges of the area classified as road are computed. These get combined with the edges from the edge detection. The closest intersection of any edge with the given mask of the image is used to calculate the maximum speed of the vehicle. 
 
-In the second strategy, the edges are first calculated using edge detection. Each edge is then checked for whether it lies on the road or not using road classification. For safety reasons there is an additional check. The above, left and right blocks of an edge should also be considered as non-road. When an edge lies on a part of the frame that is not classified as road, it is added to a collection. The intersections of the edges in the collection and the masks are then computed. 
+In the second strategy, the edges are first calculated using edge detection. Each edge is then checked for whether it lies on the road or not using road classification. For safety reasons there is an additional check. The two blocks above, left and right of an edge should also be considered as non-road. When an edge lies on a part of the frame that is not classified as road, it is added to a collection. The intersections of the edges in the collection and the masks are then computed. Using the mask and the location of the intersection closest to the car, the maximum driving speed is derived.
 
 \begin{figure}[t]
   \centering
@@ -348,7 +346,7 @@ Considering the results of the different scenarios, we can conclude that trainin
 \subsection{Driving results}
 Driving results get evaluated using a script that calculates the distance a vehicle can drive in one minute, based on the given speed by our system. This script includes a ''ground truth'' for each frame in each dataset. If our speeds exceed this ground truth, the vehicle crashes and is not able to continue driving.
 
-In section \ref{method-combination} two strategies were presented. These use a combination of both classification and edge detection. First, the evaluation was run separately on these two methods. The results are shown in figure \ref{distance_result}. The first bar of the histogram shows for every dataset the performance of road classification. Because of a crash in the first dataset there can only be traveled 317 meters (out of the total 1350 meters in this dataset). The second bar shows the distance traveled only relying on edge detection for each dataset. There are no crashes in the four datasets so we can say these results are way better than the ones only using classification. This makes us believe the combination strategy that relies more on edge detection (strategy 2) will be the better one.
+In section \ref{method-combination} two strategies were presented. These use a combination of both classification and edge detection. First, the evaluation was run separately on these two methods. The results are shown in figure \ref{distance_result}. The first bar of the histogram shows for every dataset the performance of road classification. The second bar shows the distance traveled only relying on edge detection for each dataset. There are no crashes in the four datasets so we can say these results are way better than the ones only using classification. This makes us believe the combination strategy that relies more on edge detection (strategy 2) will be the better one.
 
 The first way of combining the two methods is very safe and thus results in no crashes over the four datasets. A region is considered to be road only if it's identified as road by the road classification and if there are no edges. Both classification and edge detection should indicate a pixel as road in order to be used for safe driving. The performance of this combination is shown in the third bar of figure \ref{distance_result}. As said, this strategy is very safe, giving up a lot of traveled distance in favor of safety. 
 
@@ -357,25 +355,6 @@ The second strategy for combination also results in zero crashes over the four d
 	\centering
 	\includegraphics[width=\textwidth]{fig/distance_result}
 	\caption{Results of road classification, edge detection and combinations.\label{distance_result}}
-\end{figure}
-
-As an extra, this strategy is also able to cope better with zebra crossings than the first strategy. This is shown in figure \ref{zebra}. In the first figure (\ref{zebra-1}) TODO
-
-\begin{figure}[H]
-\centering
-\begin{subfigure}[t]{.5\textwidth}
-  \centering
-  \includegraphics[width=.9\textwidth]{fig/zebra_edge_filtered.png}
-  \caption{Zebra crossing filtered out by edge detection.}
-  \label{zebra-1}
-\end{subfigure}%
-\begin{subfigure}[t]{.5\textwidth}
-  \centering
-  \includegraphics[width=.9\textwidth]{fig/zebra_road_filtered.png}
-  \caption{Zebra crossing classified as road.}
-  \label{zebra-2}
-\end{subfigure}
-\caption{Zebra crossing\label{zebra}}
 \end{figure}
 
 \section{Conclusion}
