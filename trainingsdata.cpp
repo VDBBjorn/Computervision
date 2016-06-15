@@ -118,7 +118,7 @@ void guiLabeling(LbpFeatureVector& fv, Mat& img, vector<bool>& isRoad){
 	}
 }
 
-void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad, bool useLBP, bool useColor){
+void saveFrameOutput(const string frameName, const Mat& frame, const Mat& featureVectors, vector<bool>& isRoad, bool useColor, bool useLBP){
 	vector<short> labels(isRoad.size());
 	for(int i=0;i<isRoad.size();i++)
 		labels[i] = (isRoad[i]? 1 : -1);
@@ -199,7 +199,7 @@ void parameterIterationTraining(bool relabel=true){
     int frameInterval = 10;
     // int frameStopIdx = io::FRAME_MAX_IDX;
     int frameStopIdx = 50;
-	bool trainAuto = false; // Whether or not to use automatic training for SVM
+	bool trainAuto = true; // Whether or not to use automatic training for SVM
 	bool includeMarksVals[] = {false,true};
 	bool useColorVals[] = {false,true,true};
 	bool useLBPVals[] = {true,false,true};
@@ -232,7 +232,7 @@ void parameterIterationTraining(bool relabel=true){
 		    Mat featureVectors;
 
 		    io::buildFrameName(buffer,frameName,dataset,fIdx,innerMargin,blkSize,includeMarks);
-		    fv.processFrame(frameName,frame,featureVectors,useColor,useLBP,true);
+		    fv.processFrame(frameName,frame,featureVectors,useColor,useLBP);
 
 		    vector<bool> isRoad;
 		    generateLabels(frameName,isRoad,featureVectors.rows);
@@ -243,7 +243,7 @@ void parameterIterationTraining(bool relabel=true){
 			    guiLabeling(fv,frameWithBlocks,isRoad);
 			}
 
-		    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad,useLBP,useColor);
+		    saveFrameOutput(frameName,frameWithBlocks,featureVectors,isRoad,useColor,useLBP);
 
 		    destroyAllWindows();
 		}
