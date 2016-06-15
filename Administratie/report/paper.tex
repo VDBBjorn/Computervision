@@ -72,9 +72,31 @@ One limitation of the basic LBP operator is that its small 3x3 neighborhood cann
 \end{figure}
 
 \subsection{SVM classification}
-Support Vector Machines (SVM's) \cite{Boswell2002} are a learning method used for binary classification. The basic idea is to find a hyperplane which separates the $d$-dimensional data perfectly into its two classes.
+Support Vector Machines (SVM's) \cite{Boswell2002} are a learning method used for binary classification. The idea is to find a hyperplane which separates the $d$-dimensional data perfectly into its two classes. However, since example data is often not linearly separable, SVM's introduce the notion of a "kernel induced feature space" which casts the data into a higher dimensional space where the data is separable. Typically, casting into such a space would cause problems computationally, and with overfitting. The key insight used in SVM's is that the higher-dimensional space doesn't need to be dealt with directly, which eliminates the above concerns.
 
-TODO: Tim
+Basically, we want the hyperplane that maximizes the geometric distance to the closest data points (as shown in figure \ref{fig:hyperplane}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[height=7cm]{fig/SVM_hyperplane.png}
+\caption{Choosing the hyperplane that maximizes the margin.}
+\label{fig:hyperplane}
+\end{figure}
+
+Only the closest data points contribute to deciding the optimal hyperplane, which is why these are called the \textit{support vectors}. They are the only ones needed in defining (and finding) the optimal hyperplane. 
+
+The equation for the hyperplane is subject to a constraint concerning the parameter $C$. 
+One can think of $C$ as a tunable parameter: higher $C$ corresponds to more importance on classifying all the training data correctly, lower $C$ results in a more "flexible" hyperplane that tries to minimize the margin error for each example.
+
+\paragraph{Kernels} The original equation for the hyperplane to linearly separate the data contains a linear kernel. \cite{Hsu2016} points out when the use of a simple linear kernel is appropriate:
+if the number of features is large, one may not need to map data to a higher dimensional space. That is, the nonlinear mapping does not improve the performance. Using the linear kernel is good enough, and one only searches for the parameter $C$.
+
+We mentioned that SVM's can use a "kernel induced feature space" which casts the data into a higher dimensional space where the data is separable, in case the data is not linearly separable in its original space. Pending on the type of data and application of the SVM, there are several types of kernels which could be used. The Radial Basis Function (RBF) kernel is a often a reasonable first choice, because it can handle the case when the relation between class labels and attributes is non-linear, while only adding one more parameter $\gamma$ to search for.
+
+\paragraph{Parameters} There are two parameters for an RBF kernel: $C$ and $\gamma$. It is not known beforehand which $C$ and $\gamma$ are best for a given problem; consequently some kind of model selection (parameter search) must be done. The goal is to identify good ($C$, $\gamma$) so that the classifier can accurately predict unknown data (i.e. testing data).
+
+One method for comparing results for a set of parameter values is cross-validation. In $v$-fold cross-validation, we first divide the training set into $v$ subsets of equal size. Sequentially one subset is tested using the classifier trained on the remaining $v − 1$ subsets. Thus, each instance of the whole training set is predicted once so the cross-validation accuracy is the percentage of data which are correctly classified.
+
 \subsection{Precision, recall, F-scores}
 
 TODO: Bjorn
@@ -86,9 +108,8 @@ TODO: Mathias
 \section{Method}
 In order to determine the maximum speed of a vehicle two image processing techniques are used: SVM classification and edge detection. We first try to rely on edge detection to find the contours of the lanes where driving is permitted (i.e. where no obstacles are found). We estimate the reliability of the edge detection and incorporate road detection using the SVM classifier when needed.
 
-For the implementation of our method, we use OpenCV 3.1 \cite{Bradski2000} and C++. Four different datasets were used to either or test the solution.
-
-\textbf{TODO}: kort over training van classificatie  (TIM)
+For the implementation of our method, we use OpenCV 3.1 \cite{Bradski2000} and C++. Four different datasets were used to either train or test the solution.
+To train out SVM classifier, we used a function of the OpenCV SVM library which selects the optimal parameters using cross-validation.
 
 \subsection{Parameters for SVM classification}\label{parameters-classification}
 The goal of this classifier is to determine what pixels are part of the road and which are not. We will describe multiple tunable parameters in order to get optimal classification for road detection. These parameters determine both the length and values of the feature vectors, which are then fed to the SVM classifier. We compare classification results varying these parameters for the feature vector in section \ref{results-svm-classification}.
@@ -98,7 +119,21 @@ Each frame is split into multiple blocks of predetermined size. We chose to vary
 
 The block size affects the level of detail taken into account while calculating the feature vector, as the values for the feature vector operate within one block size. Some examples of different block sizes can be found in figure \ref{fig:methods-block-sizes}.
 
-TODO
+\begin{figure}[ht]
+\centering
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \includegraphics[width=1\textwidth]{fig/svm_prediction_16_lbp_marks.png}
+  \caption{Block size 16x16px}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \includegraphics[width=1\textwidth]{fig/svm_prediction_32_lbp_marks.png}
+  \caption{Block size 32x32px}
+\end{subfigure}
+\caption{SVM prediction using only LBP values and including road marks. Green blocks were predicted to be road, red to be non-road.}
+\label{fig:methods-block-sizes}
+\end{figure}
 
 \subsubsection{LBP}
 With LBP we try to characterize the structure of roads within a block. The histogram of LBP values within that block can be added to the feature vector in order to improve classification. These histograms are calculated per channel (e.g. 3 channels for RGB) and are added consecutively to the feature vector. 
@@ -108,13 +143,24 @@ With LBP we try to characterize the structure of roads within a block. The histo
 Because working with LBP values only doesn't take color intensity into account \cite{Pietikainen2002}, histogram values of color intensity per block and channel are added to the feature vector. 
 
 \subsection{Kernels for SVM classification}\label{methods-kernels}
-Judging from the OpenCV documentation\footnote{http://docs.opencv.org/3.1.0/} there are two SVM kernels fit for a two-class classification problem. 
+Judging from the OpenCV documentation\footnote{http://docs.opencv.org/3.1.0/} there are two SVM kernels fit for a two-class classification problem.
+A linear kernel is faster, but the RBF kernel will outperform the linear kernel in case the data is not linearly separable. We tested and compared the results using each kernel to decide which is best fit for our classification problem.
 
-TODO: Tim
+\subsection{Training the SVM classifier}
+For each combination of the previously mentioned parameters, the SVM classifier must be trained. For a training set (a subset of the datasets available) each frame is divided into blocks. Each block must be manually labelled with the expected value for classification. For practical reasons we put a margin between each block in the frames of the training set and only used the $i$-th frame of each dataset (i=0,10,...,40).
+Figure \ref{fig:frame-training} shows a visualization of pre-labeled blocks in a frame.
+The classifier is trained using the label and calculated feature vector for each block in each frame of the training set.
 
+\begin{figure}[ht]
+\centering
+  \centering
+  \includegraphics[width=.7\textwidth]{fig/svm_training_32.png}
+\caption{Visualization of a pre-labelled frame of a training set. Block size 32x32px, excluding road marks}
+\label{fig:frame-training}
+\end{figure}
 
 \subsection{Road marks}
-The training dataset was labeled considering blocks containing road marks once as part of the road class and once as part of the non-road class. Initially road marks were labeled as non-road, in order to get a good classification of road (i.e. different types of asphalt). As these road marks aren't really considered an obstacle for a car driver, ideally they should be classified as road. This makes up for a more difficult classification problem. To quantify this effect we apply classification both with and without road marks. 
+The training dataset was labelled considering blocks containing road marks once as part of the road class and once as part of the non-road class. Initially road marks were labelled as non-road, in order to get a good classification of road (i.e. different types of asphalt). As these road marks aren't really considered an obstacle for a car driver, ideally they should be classified as road. This makes up for a more difficult classification problem. To quantify this effect we apply classification both with and without road marks. 
 
 \subsection{Removing details}
 
@@ -272,6 +318,7 @@ Overall we can conclude that using only LBP with road marks shows the optimal re
 
 Considering the results of the different scenarios, we can conclude that training on dataset four results in poorer classification overall. This is because another type of road is used in this dataset, conflicting with the more common road type present in the other datasets. This distorts the classifier increases misclassifications.
 
+\textbf{TODO} check if list not f***ed up.\\
 \noindent In retrospect, the optimal parameters for our classification problem are:
 \begin{itemize}
 \item RBF kernel
