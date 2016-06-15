@@ -147,7 +147,7 @@ For each combination of the previously mentioned parameters, the SVM classifier 
 Figure \ref{fig:frame-training} shows a visualization of pre-labeled blocks in a frame.
 The classifier is trained using the label and calculated feature vector for each block in each frame of the training set.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
   \centering
   \includegraphics[width=.7\textwidth]{fig/svm_training_32.png}
@@ -279,7 +279,7 @@ For the first strategy, the edges of the area classified as road are computed. T
 
 In the second strategy, the edges are first calculated using edge detection. Each edge is then checked for whether it lies on the road or not using road classification. For safety reasons there is an additional check. The above, left and right blocks of an edge should also be considered as non-road. When an edge lies on a part of the frame that is not classified as road, it is added to a collection. The intersections of the edges in the collection and the masks are then computed. 
 
-\begin{figure}[t]
+\begin{figure}[h]
   \centering
   \includegraphics[width=.9\textwidth]{fig/frame00025.png}
   \caption{Visualization of a processed frame showing both classification and edge detection}
