@@ -366,7 +366,7 @@ The second strategy for combination also results in zero crashes over the four d
 	\caption{Results of road classification, edge detection and combinations.\label{distance_result}}
 \end{figure}
 
-This last combination based on edge detection is able to cope with zebra crossings. This is shown in figure \ref{zebra}. In the first one the road markings are small because the car is far enough. Edge detection is therefore able to filter out these markings. In the next frame the markings are closer to the care and are too large to be filtered out. Because the road classification suggests the markings are road, they are considered road.
+As an extra, this strategy is also able to cope better with zebra crossings than the first strategy. This is shown in figure \ref{zebra}. In the first figure (\ref{zebra-1}) TODO
 
 \begin{figure}[t]
 \centering
@@ -374,11 +374,13 @@ This last combination based on edge detection is able to cope with zebra crossin
   \centering
   \includegraphics[width=.9\textwidth]{fig/zebra_edge_filtered.png}
   \caption{Zebra crossing filtered out by edge detection.}
+  \label{zebra-1}
 \end{subfigure}%
 \begin{subfigure}[t]{.5\textwidth}
   \centering
   \includegraphics[width=.9\textwidth]{fig/zebra_road_filtered.png}
   \caption{Zebra crossing classified as road.}
+  \label{zebra-2}
 \end{subfigure}
 \caption{Zebra crossing\label{zebra}}
 \end{figure}

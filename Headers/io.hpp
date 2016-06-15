@@ -108,10 +108,20 @@ namespace io {
 	    struct stat st;
 	    const char* cDir = dir.c_str();
 	    if(stat(cDir,&st) == -1){
-	        if(mkdir(cDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ) != 0){
-	            cerr<<"Error in checkOutputDir : failed to create dir "<<dir<<endl;
-	            throw;
-	        }
+	    	// Dir does not exist, create recursively
+	    	stringstream ss(dir);
+	    	string subDir,crtDir;
+	    	const char delim = '/';
+	    	while(getline(ss,subDir,delim)){
+	    		if(!subDir.length()>0)
+	    			continue;
+	    		crtDir += subDir+delim;
+	    		cDir = crtDir.c_str();
+		        if(stat(cDir,&st) == -1 && mkdir(cDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH ) != 0){
+		            cerr<<"Error in checkOutputDir : failed to create dir "<<dir<<endl;
+		            throw;
+		        }
+		    }
 	    }
 	}
 

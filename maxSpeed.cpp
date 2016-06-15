@@ -66,7 +66,7 @@ bool isRoad(vector<int> & roadRegions, int blksInWidth, int frameRows, int frame
     }
 }
 
-void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds) {
+void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames, vector<vector<int> > roadRegions, vector<double> speeds, string dirOutputFrames) {
     int crash = 0;
 
     int thresh = 255;
@@ -260,9 +260,9 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
         /*namedWindow( "Max Speed", CV_WINDOW_AUTOSIZE );
         imshow( "Max Speed", dst );
         waitKey(0);*/
-        io::checkDir("outputframes");
+        io::checkDir(dirOutputFrames);
         stringstream ssOut;
-        ssOut << "outputframes/frame" << setfill('0') << std::setw(5) << i << ".png";
+        ssOut << dirOutputFrames << "/frame" << setfill('0') << std::setw(5) << i << ".png";
         imwrite(ssOut.str(),dst);
     }
     cout << "CRASHES: " << crash << endl;
@@ -320,7 +320,7 @@ int main(int argc, char** argv){
         cout << "add parameters: datasetfolder" << endl;
         return 1;
     }
-    string datasetFolder(argv[1]);
+    string dirDataset(argv[1]);
     
     vector<double> speeds;
     string line;
@@ -338,8 +338,8 @@ int main(int argc, char** argv){
         iss >> speed;
         speeds.push_back(speed);
     }
-    vector<Mat> masks = read_images(datasetFolder,"mask%05d.png");
-    vector<Mat> frames = read_images(datasetFolder,"frame%05d.png");
+    vector<Mat> masks = read_images(dirDataset,"mask%05d.png");
+    vector<Mat> frames = read_images(dirDataset,"frame%05d.png");
 
     vector<Mat> roads = detectLines(masks,frames);
     cout << "lines done"<< endl;
@@ -353,9 +353,11 @@ int main(int argc, char** argv){
         }
     }*/
     
-    system("exec rm -r outputframes/*");
+    string dirOutputFrames = "outputframes/"+dirDataset;
+    io::checkDir(dirOutputFrames);
+    system(string("exec rm -r "+dirOutputFrames+"/*").c_str());
 
-    showMaxSpeed(masks,roads,frames,roadRegions,speeds);
+    showMaxSpeed(masks,roads,frames,roadRegions,speeds,dirOutputFrames);
     
     //waitKey(0);
     destroyAllWindows();
