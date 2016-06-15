@@ -36,7 +36,7 @@ namespace io {
     const int lbpRadius = 1;
     const bool includeMarks = true;
     const bool trainAuto = true;
-    const bool useLBP = true; // Make sure to use either color, LBP or both
+    const bool useLBP = false; // Make sure to use either color, LBP or both
     const bool useColor = true;
 
     /** SVM parameters for when not training automatically **/

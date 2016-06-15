@@ -288,21 +288,21 @@ In the second strategy, the edges are first calculated using edge detection. Eac
 \section{Results}
 
 \subsection{SVM classification}\label{results-svm-classification}
-We iterated through several parameter values (as discussed in \ref{parameters-classification}) to find optimal classification for road detection. For each combination of parameters we train and test on different combinations of datasets. For each combination we calculate the F-scores. These scores are used to compare the classification results (higher F-scores indicate better classification). 
+We iterated through several parameter values (as discussed in \ref{parameters-classification}) to find optimal classification for road detection. For each combination of parameters we train and test on different combinations of datasets. For each combination we calculate the F1-scores \cite. These scores are used to compare the classification results (higher F-scores indicate better classification). 
 
-Different combinations of training sets were selected of the four given datasets (training sets are each time shown on the x-axis on the graphs). The trained classifier is then tested on the remaining datasets.
+Different combinations of training sets were selected of the four given datasets (training sets used are each time shown on the x-axis on the graphs). The trained classifier is then tested on the remaining datasets.
 
 \subsubsection{Kernels}
-As previously mentioned in section \ref{methods-kernels}, there are two SVM kernels we can use for this classification problem. On average, we tend to get a nearly 11\% increase in F-scores using RBF kernel instead of linear kernel. It is safe to say the RBF kernel outperforms the linear kernel for this classification problem in all of our test scenarios. 
+As previously mentioned in section \ref{methods-kernels}, there are two SVM kernels we can use for this classification problem. On average, we tend to get a nearly 10\% increase in F-scores using an RBF kernel instead of a linear kernel. It is safe to say the RBF kernel outperforms the linear kernel for this classification problem in all of our test scenarios. 
 
 \subsubsection{Block size}
-In general, block sizes 16x16px and 32x32px tend to show the better results. As an example we present the F-scores for LBP and color with road marks in figure \ref{fig:lbp-col-wi-rm}. Other combinations follow the same trend. For the goal of this application, a smaller block size will be more practical (i.e. better accuracy). This is why we prefer the block size of 16x16px. 
+In general, block sizes 16x16px and 32x32px tend to show the better results. As an example we present the F-scores for using color feature vectors with road marks in figure \ref{fig:col-wi-rm}. Other combinations follow the same trend, although 32x32px sometimes performs slightly better. For the goal of this application, a smaller block size will be more practical (i.e. better accuracy). This is why we prefer the block size of 16x16px. 
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{fig/RBF_LBP_Col_wi_RM.png}
-\caption{F-scores for LBP and color with road marks using RBF kernel}
-\label{fig:lbp-col-wi-rm}
+\includegraphics[width=\textwidth]{fig/RBF_Col_wi_RM.png}
+\caption{F-scores for color with road marks using RBF kernel}
+\label{fig:col-wi-rm}
 \end{figure}
 
 \subsubsection{LBP}
