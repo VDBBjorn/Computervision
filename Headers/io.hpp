@@ -34,8 +34,8 @@ namespace io {
     const int innerMargin = 64;
     const int blkSize = 16; // 8,16,32
     const int lbpRadius = 1;
-    const bool includeMarks = false;
-    const bool trainAuto = false;
+    const bool includeMarks = true;
+    const bool trainAuto = true;
     const bool useLBP = true; // Make sure to use either color, LBP or both
     const bool useColor = true;
 

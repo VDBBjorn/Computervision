@@ -175,8 +175,7 @@ public:
 	* If trainingsdata is ment to be generated, CSV-files containing labels and featurevectors will be created,
 	* along with a copy of the frame with the blocks drawn on top of it.
 	*/
-	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool useColor=io::useColor, bool useLBP=io::useLBP, bool isTrainingsdata=false){
-	// void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool useColor=true, bool useLBP=true, bool isTrainingsdata=false){
+	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool useColor=io::useColor, bool useLBP=io::useLBP){
 
     	cout<<"Start processFrame "<<fnFrame+(useLBP?io::lbpStr:"")+(useColor?io::colorStr:"")<<endl;
     	if(!useColor && !useLBP){
@@ -188,10 +187,6 @@ public:
 		blkX = outerMargin;
 		blkY = outerMargin;
 		if(outerMargin<lbpRadius) outerMargin = lbpRadius;
-
-		/*    Process frame   */
-    	Mat dst;
-    	if(isTrainingsdata) img.copyTo(dst);
 
 		int imWidth=img.cols;
 		int imHeight=img.rows;
