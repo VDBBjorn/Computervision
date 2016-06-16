@@ -351,15 +351,8 @@ int main(int argc, char** argv){
         iss >> speed;
         speeds.push_back(speed);
     }
-    vector<Mat> masks_all = read_images(dirDataset,"mask%05d.png");
-    vector<Mat> frames_all = read_images(dirDataset,"frame%05d.png");
-
-    vector<Mat> masks;
-    vector<Mat> frames;
-    for(int i=0; i < 30; i++) {
-        masks.push_back(masks_all[i]);
-        frames.push_back(frames_all[i]);
-    }
+    vector<Mat> masks = read_images(dirDataset,"mask%05d.png");
+    vector<Mat> frames = read_images(dirDataset,"frame%05d.png");
 
 
     vector<Mat> roads = detectLines(masks,frames);
