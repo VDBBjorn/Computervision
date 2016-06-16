@@ -102,7 +102,8 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
 
 
         //rode outliers uithalen
-        bool changedOutlier = true;
+        // --> Disabled
+        /*bool changedOutlier = true;
         while(changedOutlier) {
             changedOutlier = false;
             for (int z = blksInWidth; z < roadRegions[i].size() - blksInWidth; z++) {
@@ -135,7 +136,7 @@ void showMaxSpeed(vector<Mat> & masks, vector<Mat> & roads, vector<Mat> & frames
                     }
                 }
             }
-        }
+        }*/
 
         // Add non-road rectangles to the canny output
         // --> Disabled
