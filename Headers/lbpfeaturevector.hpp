@@ -177,7 +177,7 @@ public:
 	*/
 	void processFrame(string fnFrame, Mat& img, Mat& featVectors, bool useColor=io::useColor, bool useLBP=io::useLBP){
 
-    	cout<<"Start processFrame "<<fnFrame+(useLBP?io::lbpStr:"")+(useColor?io::colorStr:"")<<endl;
+    	// cout<<"Start processFrame "<<fnFrame+(useLBP?io::lbpStr:"")+(useColor?io::colorStr:"")<<endl;
     	if(!useColor && !useLBP){
     		cerr<<"You are using neither color or LBP for featurvectors, aka nothing!"<<endl;
     		throw;

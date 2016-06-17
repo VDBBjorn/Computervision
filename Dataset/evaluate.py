@@ -26,6 +26,3 @@ print("You travelled %f metres in %f seconds."%(distance,time))
 #plt.plot(speeds)
 #plt.ylim([0,30])
 #plt.show()
-	
-
-

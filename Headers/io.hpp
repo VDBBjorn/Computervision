@@ -15,10 +15,10 @@ using namespace cv;
 
 namespace io {
 
-	/** Constants **/
+	/** Directories and data filenames **/
 	const string dirOutput = "output/";
-	const string dirOutputLogging = dirOutput+"Logging/";
-	const string dirTrainingsdata = "Trainingsdata/";
+	const string dirOutputLogging = "Logging/";
+	const string dirData = "Data/";
 	const string labelsPostfix = "_labels.csv";
 	const string lbpStr = "_lbp";
 	const string colorStr = "_color";
@@ -27,18 +27,19 @@ namespace io {
 	const int KEY_ESCAPE = 537919515;
 	
 	/** Maxspeed training and run parameters**/
+    const int blkSize = 16; // 8,16,32
+    const bool useLBP = false; // Make sure to use either color, LBP or both
+    const bool useColor = true;
+    const bool includeMarks = true;
+    const bool trainAuto = false;
+
 	const string datasetFolders[4] = { "Dataset/01/", "Dataset/02/","Dataset/03/", "Dataset/04/" };
     const int datasets[] = {1,2,3,4}; //{1,2,3,4};
     const int frameInterval = 10;
     const int frameStopIdx = 50;
     const int innerMargin = 64;
-    const int blkSize = 16; // 8,16,32
     const int lbpRadius = 1;
-    const bool includeMarks = true;
-    const bool trainAuto = true;
-    const bool useLBP = false; // Make sure to use either color, LBP or both
-    const bool useColor = true;
-
+    
     /** SVM parameters for when not training automatically **/
     const double C = 0.1;
     const double gamma = 0.00001;
@@ -162,61 +163,14 @@ namespace io {
 	    frameName = string(buffer) + (includeMarks?marksStr:"");
 	}
 
-	void readTrainingsdata(vector<short>& datasets, Mat& labelsMat, Mat& trainingsMat){
+	void readTrainingsdata(string frameName, Mat& labelsMat, Mat& trainingsMat, bool useLBP, bool useColor){
 		vector<short> labels;
 		vector<vector<int> > featureVectors;
 
-		for(int s=0;s<datasets.size();s++) {
-			for(int f=0; f<=200; f+=5) {
-			    char buffer[36];
-			    sprintf(buffer, "%02dframe%05d",datasets[s],f);
-			    string frameName = string(buffer);
-			    string fnLbl = dirTrainingsdata+frameName+labelsPostfix;
-			    string fnFv = dirTrainingsdata+frameName+featVecsPostfix;
-			    if(file_exists(fnLbl) && file_exists(fnFv)) {
-					cout<<"Reading trainingsdata of frame "<<frameName<<endl;
-				 	ifstream ifsLbl(fnLbl.c_str());
-				 	ifstream ifsFv(fnFv.c_str());
-
-					string lineLbl,lineFv;
-					while( getline(ifsLbl,lineLbl) && getline(ifsFv,lineFv) ){
-						string strLbl = lineLbl.substr(lineLbl.find_first_of(',')+1);
-						labels.push_back(atoi(strLbl.c_str()));
-
-						size_t pos = lineFv.find_first_of('"')+1;
-						string strFv = lineFv.substr(pos);
-						stringstream ssFv(strFv);
-						vector<int> fvValues;
-						string strValue;
-						while(getline(ssFv,strValue,';')) {
-							fvValues.push_back(atoi(strValue.c_str()));
-						}
-						featureVectors.push_back(fvValues);
-					}
-				}
-			}
-		}
-
-		labelsMat = Mat::zeros(labels.size(), 1, CV_32SC1);
-	 	for(int i=0; i<labels.size();i++) {
-			labelsMat.at<int>(i,0) = labels[i];
-		}
-		trainingsMat = Mat::zeros(featureVectors.size(), featureVectors[0].size(), CV_32FC1);
-		for(int i = 0; i<featureVectors.size(); i++) {
-			for(int j=0; j<featureVectors[i].size(); j++) {
-				trainingsMat.at<float>(i,j) = featureVectors[i][j];
-			}
-		}
-	}
-
-	void readTrainingsdataOutput(string frameName, Mat& labelsMat, Mat& trainingsMat, bool useLBP, bool useColor){
-		vector<short> labels;
-		vector<vector<int> > featureVectors;
-
-	    string fnLbl = dirOutput+frameName+labelsPostfix;
-	    string fnFv = dirOutput+frameName+(useLBP?lbpStr:"")+(useColor?colorStr:"")+featVecsPostfix;
+	    string fnLbl = dirData+frameName+labelsPostfix;
+	    string fnFv = dirData+frameName+(useLBP?lbpStr:"")+(useColor?colorStr:"")+featVecsPostfix;
 	    if(file_exists(fnLbl) && file_exists(fnFv)) {
-			cout<<"Reading trainingsdata from "<<fnFv<<endl;
+			// cout<<"Reading trainingsdata from "<<fnFv<<endl;
 		 	ifstream ifsLbl(fnLbl.c_str());
 		 	ifstream ifsFv(fnFv.c_str());
 
@@ -274,12 +228,9 @@ namespace io {
 	    struct tm  tstruct;
 	    char       buf[80];
 	    tstruct = *localtime(&now);
-	    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
-	    // for more information about date/time format
 	    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
 
 	    return buf;
-	    // return chrono::system_clock::now();
 	}
 }
 

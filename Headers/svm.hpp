@@ -35,7 +35,7 @@ public:
 	    // svm->setKernel(SVM::LINEAR);
 	    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
 	    Ptr<TrainData> trainData_ptr = TrainData::create(trainingsMat, ROW_SAMPLE , labelsMat);
-		cout << "training the SVM... "<<(trainAuto? "(automatically, this could take a while...)" : "") << endl;
+		cout << "Training the SVM... "<<(trainAuto? "(automatically, this could take a while...)" : "") << endl;
 	    if(trainAuto){
 		    /* Automatic training */
 		    ParamGrid emptyGrid(0,0,0);
@@ -150,7 +150,8 @@ void my_svm::test(int min = 1, int max = 4, int skip = 5, int number = 5) {
     for(int ds=min; ds<=max; ds++) {
         char dsnumber[36];
         sprintf(dsnumber, "%02d", ds);
-        for(int f=5; f<=(5+number*skip); f+=skip) {
+        // for(int f=5; f<=(5+number*skip); f+=skip) {
+        for(int f=0; f<=(number*skip); f+=skip) {
             char number[36];
             sprintf(number, "%05d", f);
             // Show decision regions by the SVM
@@ -189,7 +190,7 @@ void my_svm::test(int min = 1, int max = 4, int skip = 5, int number = 5) {
 }
 
 void my_svm::printParams(ostream& os){
-	os<<"--- Params ---"<<endl;
+	os<<"--- Parameters ---"<<endl;
 	os<<"C:\t\t"<<				svm->getC()<<endl;
 	os<<"Class weights:\t"<<	svm->getClassWeights()<<endl;
 	os<<"Coef0:\t\t"<<			svm->getCoef0()<<endl;
