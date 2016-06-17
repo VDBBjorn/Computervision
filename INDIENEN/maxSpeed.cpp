@@ -306,6 +306,13 @@ int main(int argc, char** argv){
     }
     string dirDataset(argv[1]);
     string results;
+
+    // Remove ending (back)slash
+    const char* delim = "/\\";
+    size_t pos = dirDataset.find_last_of(delim);
+    if(pos==(dirDataset.length()-1)){
+        dirDataset = dirDataset.substr(0,pos);
+    }
     
     vector<double> speeds;
     string line;
@@ -334,12 +341,8 @@ int main(int argc, char** argv){
     cout << "Road detection done." << endl;
     
     string subdirOutFra = dirDataset;
-    const char* delim = "/\\";
-    size_t pos = subdirOutFra.find_last_of(delim);
+    pos = subdirOutFra.find_last_of(delim);
     if(pos != string::npos){
-        if(pos==subdirOutFra.length()-1){
-            pos = subdirOutFra.find_last_of(delim,pos);
-        }
         subdirOutFra = subdirOutFra.substr(pos+1);
     }
     string dirOutputFrames = "outputframes/"+subdirOutFra;

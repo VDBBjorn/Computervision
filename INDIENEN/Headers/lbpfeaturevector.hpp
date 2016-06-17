@@ -39,6 +39,10 @@ public:
 	*/
 	template <typename _Tp>
 	void _LBP(const Mat& src, Mat& dst, int r, int x, int y, int winSize) {
+	    // if( x<r || y<r || x+winSize+r>src.cols || y+winSize+r>src.rows){
+	    //     cerr << "Error in _LBP : source coordinates and window size make radius exceed image size" << endl;
+	    //     throw;
+	    // }
 	    dst = Mat::zeros(winSize, winSize, CV_8UC(src.channels()));
 	    vector<Mat> srcChnls(src.channels()) , dstChnls(src.channels());
 	    split(src,srcChnls);
