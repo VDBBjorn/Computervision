@@ -39,7 +39,8 @@ Genereert featurevectoren voor alle iteraties.
 Headers:
 --------
 Headers/LineDetection.hpp
-
+Bevat de imlementatie voor het uitvoeren van Canny Edge Detection, waarbij eerst de details op de rijweg
+weggefilterd zijn door erode en dilate
 
 Headers/io.hpp
 Bevat configuratiewaarden voor maxSpeed.cpp, svm.cpp en trainingsdata.cpp.
