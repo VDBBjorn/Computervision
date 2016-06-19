@@ -280,6 +280,7 @@ vector<vector<int> > roadDetection(vector<Mat> & frames){
     my_svm svm(initLabels,initTrainingsdata,io::trainAuto);
     
     // Show decision regions by the SVM
+    cout << "Performing road detection..." << endl;
     vector<vector<int> > roadRegions;
 
     LbpFeatureVector fv;
@@ -333,12 +334,12 @@ int main(int argc, char** argv){
     io::readImages(dirDataset,"mask%05d.png",masks);
     io::readImages(dirDataset,"frame%05d.png",frames);
 
-    cout << "Start edge detection..."<<endl;
+    cout << "Starting edge detection..."<<endl;
     vector<Mat> roads = detectLines(masks,frames);
-    cout << "Edge detection done."<< endl;
-    cout << "Start road detection..."<<endl;
+    cout << "Edge detection done."<< endl << endl;
+    cout << "Starting road detection..."<<endl;
     vector<vector<int> > roadRegions = roadDetection(frames);
-    cout << "Road detection done." << endl;
+    cout << "Road detection done." << endl << endl;
     
     string subdirOutFra = dirDataset;
     pos = subdirOutFra.find_last_of(delim);
@@ -358,9 +359,9 @@ int main(int argc, char** argv){
     osResults<<results<<endl;
     osResults.close();
 
-    cout<<"Finished!"<<endl;
-    cout<<"Processed frames saved to "<<dirOutputFrames<<"/"<<endl;
-    cout<<"Maxspeeds saved to "<<fnResults<<endl;
+    cout << "Finished!"<< endl << endl;
+    cout << "Processed frames saved to " << dirOutputFrames << "/" << endl;
+    cout << "Maxspeeds saved to " << fnResults << endl << endl;
     
     destroyAllWindows();
     return 0;
